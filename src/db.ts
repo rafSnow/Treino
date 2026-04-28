@@ -49,7 +49,7 @@ export interface SessaoTreino {
 export interface Configuracao {
   id?: number;
   chave: string;
-  valor: any;
+  valor: string | number | boolean | object;
 }
 
 export interface Biometria {

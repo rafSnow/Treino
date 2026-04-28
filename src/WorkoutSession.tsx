@@ -10,7 +10,11 @@ const WorkoutSession: React.FC = () => {
   const sessoesPassadas = useLiveQuery(() => db.sessoes.orderBy('data_inicio').reverse().toArray()) || [];
 
   const playBeep = () => {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // @ts-expect-error - Handling vendor prefix for legacy browsers
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    
+    const audioCtx = new AudioContextClass();
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
@@ -37,7 +41,7 @@ const WorkoutSession: React.FC = () => {
       stopTimer();
     }
     return () => clearInterval(interval);
-  }, [isTimerActive, restTimer]);
+  }, [isTimerActive, restTimer, tickTimer, stopTimer]);
 
   if (!activeWorkout) return null;
 
@@ -98,7 +102,6 @@ const WorkoutSession: React.FC = () => {
         <div className="max-w-md mx-auto w-full space-y-4">
           {activeWorkout.exercicios_realizados.map((exRealizado, exIdx) => {
             const infoEx = todosExercicios.find(e => e.id === exRealizado.exercicio_id);
-            const metaEx = activeWorkout.rotina.exercicios.find(e => e.exercicio_id === exRealizado.exercicio_id);
             
             return (
               <div key={exRealizado.exercicio_id} className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -118,8 +121,8 @@ const WorkoutSession: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-2">
+
                   {exRealizado.series.map((serie, sIdx) => (
                     <div 
                       key={sIdx} 
