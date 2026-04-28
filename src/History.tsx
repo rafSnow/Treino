@@ -22,13 +22,13 @@ const History: React.FC = () => {
   const getRoutineName = (id?: number) => rotinas.find(r => r.id === id)?.nome || 'Treino Avulso';
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a]">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
       {/* Header Tabs */}
-      <div className="flex p-4 gap-2 sticky top-0 bg-gray-50 dark:bg-[#1a1a1a] z-10">
+      <div className="flex gap-2">
         <button
           onClick={() => setView('list')}
-          className={`flex-1 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-            view === 'list' ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-500'
+          className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
+            view === 'list' ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-100 dark:border-gray-700'
           }`}
         >
           <HistoryIcon size={18} />
@@ -36,8 +36,8 @@ const History: React.FC = () => {
         </button>
         <button
           onClick={() => setView('stats')}
-          className={`flex-1 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-            view === 'stats' ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-500'
+          className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
+            view === 'stats' ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-100 dark:border-gray-700'
           }`}
         >
           <TrendingUp size={18} />
@@ -45,7 +45,7 @@ const History: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-20">
+      <div className="flex-1">
         {view === 'list' ? (
           <div className="space-y-6">
             {/* Calendário de Consistência */}

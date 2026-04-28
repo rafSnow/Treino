@@ -30,19 +30,19 @@ const RoutineList: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#121212]">
-      {/* Header Fixo */}
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b dark:border-gray-800 p-4 sticky top-0 z-30 flex items-center justify-between">
-        <h1 className="text-2xl font-black tracking-tight">Minhas Fichas</h1>
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Treinar</h1>
         <button 
           onClick={handleAddNew}
-          className="bg-primary text-white p-2.5 rounded-xl shadow-lg shadow-primary/20 active:scale-90 transition-all"
+          className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
         >
           <Plus size={24} />
         </button>
       </div>
 
-      <div className="flex-1 p-4 space-y-4">
+      <div className="space-y-4">
         {rotinas?.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <LayoutList size={48} className="mx-auto mb-4 opacity-20" />

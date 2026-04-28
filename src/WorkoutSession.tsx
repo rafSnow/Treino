@@ -76,7 +76,7 @@ const WorkoutSession: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#121212] overflow-hidden">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] overflow-hidden">
       {/* Header Fixo e Compacto */}
       <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b dark:border-gray-800 p-3 z-30 shadow-sm">
         <div className="flex justify-between items-center w-full max-w-md mx-auto">

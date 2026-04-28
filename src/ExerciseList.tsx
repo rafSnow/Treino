@@ -51,36 +51,36 @@ const ExerciseList: React.FC = () => {
   const tagsDisponiveis = Array.from(new Set(exercicios?.flatMap(ex => ex.tags) || []));
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#121212]">
-      {/* Header Fixo e Elegante */}
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b dark:border-gray-800 p-4 sticky top-0 z-30">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-black tracking-tight">Catálogo</h1>
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
+      {/* Header Elegante */}
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Catálogo</h1>
           <button 
             onClick={handleAddNew}
-            className="bg-primary text-white p-2.5 rounded-xl shadow-lg shadow-primary/20 active:scale-90 transition-all"
+            className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
           >
             <Plus size={24} />
           </button>
         </div>
 
-        <div className="relative group">
+        <div className="relative group mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
           <input
             type="text"
             placeholder="Buscar exercício..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 border-none focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
+            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
           />
         </div>
 
         {tagsDisponiveis.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pt-4 pb-1 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setSelectedTag(null)}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                selectedTag === null ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                selectedTag === null ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
               }`}
             >
               TODOS
@@ -90,7 +90,7 @@ const ExerciseList: React.FC = () => {
                 key={tag}
                 onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                  selectedTag === tag ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                  selectedTag === tag ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
                 }`}
               >
                 {tag.toUpperCase()}
@@ -100,7 +100,7 @@ const ExerciseList: React.FC = () => {
         )}
       </div>
 
-      <div className="flex-1 p-4 space-y-3">
+      <div className="space-y-3">
         {exercicios?.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <Filter size={48} className="mx-auto mb-4 opacity-20" />

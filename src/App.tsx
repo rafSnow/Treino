@@ -37,10 +37,10 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-100 overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-[#1a1a1a] text-gray-900 dark:text-gray-100 overflow-hidden">
       {/* Conteúdo Principal com Scroll Independente */}
       <main className="flex-1 overflow-y-auto scrollbar-hide">
-        <div className="max-w-md mx-auto w-full min-h-full flex flex-col pb-24">
+        <div className="max-w-md mx-auto w-full min-h-full flex flex-col">
           {renderContent()}
         </div>
       </main>
