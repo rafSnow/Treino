@@ -17,9 +17,9 @@ function App() {
   const setInstallPrompt = useWorkoutStore(state => state.setInstallPrompt)
 
   useEffect(() => {
-    const handler = (e: any) => {
+    const handler = (e: Event) => {
       e.preventDefault();
-      setInstallPrompt(e);
+      setInstallPrompt(e as Parameters<typeof setInstallPrompt>[0]);
     };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);

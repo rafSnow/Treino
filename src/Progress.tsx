@@ -15,7 +15,7 @@ const Progress: React.FC = () => {
   const sessoes = useLiveQuery(() => db.sessoes.toArray()) || [];
 
   const chartData = useMemo(() => {
-    if (!selectedExerciseId) return [];
+    if (!selectedExerciseId || !sessoes) return [];
 
     return sessoes
       .filter(s => s.exercicios_realizados.some(ex => ex.exercicio_id === selectedExerciseId))

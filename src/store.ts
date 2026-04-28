@@ -10,11 +10,20 @@ interface ActiveWorkout {
   }[];
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
 interface WorkoutStore {
   activeWorkout: ActiveWorkout | null;
   restTimer: number; // em segundos
   isTimerActive: boolean;
-  installPrompt: any;
+  installPrompt: BeforeInstallPromptEvent | null;
   
   startWorkout: (rotina: Rotina) => void;
   finishWorkout: () => void;
@@ -26,7 +35,7 @@ interface WorkoutStore {
   tickTimer: () => void;
 
   // PWA actions
-  setInstallPrompt: (prompt: any) => void;
+  setInstallPrompt: (prompt: BeforeInstallPromptEvent | null) => void;
   installApp: () => void;
 }
 
@@ -36,13 +45,13 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   isTimerActive: false,
   installPrompt: null,
 
-  setInstallPrompt: (prompt: any) => set({ installPrompt: prompt }),
+  setInstallPrompt: (prompt: BeforeInstallPromptEvent | null) => set({ installPrompt: prompt }),
   
   installApp: async () => {
     const { installPrompt } = get();
     if (!installPrompt) return;
     
-    installPrompt.prompt();
+    await installPrompt.prompt();
     const { outcome } = await installPrompt.userChoice;
     if (outcome === 'accepted') {
       set({ installPrompt: null });
