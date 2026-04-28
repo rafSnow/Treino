@@ -70,7 +70,7 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-[100]">
       <div className="bg-white dark:bg-gray-800 w-full max-w-lg h-[90vh] sm:h-auto sm:max-h-[80vh] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-xl overflow-hidden">
         <div className="p-6 border-b dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800 sticky top-0 z-10">
           <h2 className="text-xl font-bold">{routineToEdit ? 'Editar Rotina' : 'Nova Rotina'}</h2>
@@ -160,7 +160,7 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
           </div>
         </form>
 
-        <div className="p-6 bg-gray-50 dark:bg-gray-900 border-t dark:border-gray-700">
+        <div className="p-6 pb-10 sm:pb-6 bg-gray-50 dark:bg-gray-900 border-t dark:border-gray-700">
           <button
             onClick={handleSubmit}
             disabled={!nome || exerciciosSelecionados.length === 0}
@@ -174,7 +174,7 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
 
       {/* Exercise Selector Modal */}
       {isSelectorOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[110] p-4">
           <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 max-h-[70vh] flex flex-col shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold">Selecionar Exercício</h3>

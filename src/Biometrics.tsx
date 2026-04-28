@@ -132,8 +132,8 @@ const Biometrics: React.FC = () => {
 
       {/* Modal de Formulário */}
       {isFormOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-xl animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 pb-10 sm:pb-6 shadow-xl animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Nova Medição</h2>
               <button onClick={() => setIsFormOpen(false)}><X size={24}/></button>
