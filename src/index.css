@@ -3,46 +3,49 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+}
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Base para App Mobile */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* O scroll será controlado pelos componentes internos */
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: flex-start;
-  min-width: 320px;
-  min-height: 100vh;
   background-color: #f9fafb;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none; /* Evita o "pull to refresh" acidental do navegador */
 }
 
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: #1a1a1a;
+    background-color: #121212;
   }
 }
 
-/* Melhorar áreas de toque em botões e inputs */
+/* Melhorar áreas de toque */
 button, input, select, textarea {
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+  font-size: 16px !important; /* Evita o zoom automático no iPhone ao focar inputs */
 }
 
-/* Esconder scrollbar mantendo funcionalidade */
+/* Utilidades de Scroll */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Safe Area para iPhones modernos */
+.safe-pb {
+  padding-bottom: env(safe-area-inset-bottom);
 }

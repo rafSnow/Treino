@@ -37,55 +37,42 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-[#1a1a1a] text-gray-900 dark:text-gray-100 overflow-hidden">
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pb-20 max-w-2xl mx-auto w-full">
-        {renderContent()}
+    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-100 overflow-hidden">
+      {/* Conteúdo Principal com Scroll Independente */}
+      <main className="flex-1 overflow-y-auto scrollbar-hide">
+        <div className="max-w-md mx-auto w-full min-h-full flex flex-col pb-24">
+          {renderContent()}
+        </div>
       </main>
 
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-4 py-3 z-20">
-        <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <button 
-            onClick={() => setActiveTab('workout')}
-            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'workout' ? 'text-primary' : 'text-gray-400'}`}
-          >
-            <Play size={20} />
-            <span className="text-[9px] font-bold uppercase tracking-tight">Treinar</span>
-          </button>
-          
-          <button 
-            onClick={() => setActiveTab('catalog')}
-            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'catalog' ? 'text-primary' : 'text-gray-400'}`}
-          >
-            <Dumbbell size={20} />
-            <span className="text-[9px] font-bold uppercase tracking-tight">Catálogo</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('history')}
-            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'history' ? 'text-primary' : 'text-gray-400'}`}
-          >
-            <HistoryIcon size={20} />
-            <span className="text-[9px] font-bold uppercase tracking-tight">Histórico</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('biometrics')}
-            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'biometrics' ? 'text-primary' : 'text-gray-400'}`}
-          >
-            <Scale size={20} />
-            <span className="text-[9px] font-bold uppercase tracking-tight">Corpo</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('settings')}
-            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'settings' ? 'text-primary' : 'text-gray-400'}`}
-          >
-            <SettingsIcon size={20} />
-            <span className="text-[9px] font-bold uppercase tracking-tight">Ajustes</span>
-          </button>
+      {/* Barra de Navegação Inferior Otimizada */}
+      <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 px-2 pt-2 pb-safe z-50">
+        <div className="max-w-md mx-auto flex justify-around items-center">
+          {[
+            { id: 'workout', icon: Play, label: 'Treinar' },
+            { id: 'catalog', icon: Dumbbell, label: 'Catálogo' },
+            { id: 'history', icon: HistoryIcon, label: 'Histórico' },
+            { id: 'biometrics', icon: Scale, label: 'Corpo' },
+            { id: 'settings', icon: SettingsIcon, label: 'Ajustes' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as Tab)}
+              className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all duration-200 ${
+                activeTab === tab.id 
+                  ? 'text-primary scale-110' 
+                  : 'text-gray-400 active:scale-95'
+              }`}
+            >
+              <tab.icon size={22} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+              <span className={`text-[10px] font-bold uppercase tracking-tight ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`}>
+                {tab.label}
+              </span>
+            </button>
+          ))}
         </div>
+        {/* Espaçador para Safe Area inferior */}
+        <div className="h-[env(safe-area-inset-bottom)]" />
       </nav>
     </div>
   )
