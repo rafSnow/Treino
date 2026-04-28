@@ -48,7 +48,8 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
     };
 
     if (exerciseToEdit?.id) {
-      await db.exercicios.update(exerciseToEdit.id, data);
+      const updateData: Partial<Exercicio> = data;
+      await db.exercicios.update(exerciseToEdit.id, updateData);
     } else {
       await db.exercicios.add(data);
     }

@@ -61,7 +61,8 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
     };
 
     if (routineToEdit?.id) {
-      await db.rotinas.update(routineToEdit.id, data);
+      const updateData: Partial<Rotina> = data;
+      await db.rotinas.update(routineToEdit.id, updateData);
     } else {
       await db.rotinas.add(data);
     }

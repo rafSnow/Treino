@@ -4,7 +4,7 @@ import { db, type Biometria } from './db';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Scale, Ruler, Plus, Trash2, ChevronRight, Save, X } from 'lucide-react';
+import { Scale, Ruler, Plus, Trash2, Save, X } from 'lucide-react';
 
 const Biometrics: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
