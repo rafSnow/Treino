@@ -14,6 +14,7 @@ interface WorkoutStore {
   activeWorkout: ActiveWorkout | null;
   restTimer: number; // em segundos
   isTimerActive: boolean;
+  installPrompt: any;
   
   startWorkout: (rotina: Rotina) => void;
   finishWorkout: () => void;
@@ -23,12 +24,30 @@ interface WorkoutStore {
   startTimer: (seconds: number) => void;
   stopTimer: () => void;
   tickTimer: () => void;
+
+  // PWA actions
+  setInstallPrompt: (prompt: any) => void;
+  installApp: () => void;
 }
 
 export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   activeWorkout: null,
   restTimer: 0,
   isTimerActive: false,
+  installPrompt: null,
+
+  setInstallPrompt: (prompt: any) => set({ installPrompt: prompt }),
+  
+  installApp: async () => {
+    const { installPrompt } = get();
+    if (!installPrompt) return;
+    
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      set({ installPrompt: null });
+    }
+  },
 
   startWorkout: (rotina: Rotina) => {
     const exercicios_realizados = rotina.exercicios.map(ex => ({

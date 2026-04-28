@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ExerciseList from './ExerciseList'
 import { Dumbbell, History as HistoryIcon, Settings as SettingsIcon, Play, Scale } from 'lucide-react'
 
@@ -14,6 +14,16 @@ type Tab = 'catalog' | 'workout' | 'history' | 'biometrics' | 'settings'
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('workout')
   const activeWorkout = useWorkoutStore(state => state.activeWorkout)
+  const setInstallPrompt = useWorkoutStore(state => state.setInstallPrompt)
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, [setInstallPrompt]);
 
   if (activeWorkout) {
     return <WorkoutSession />

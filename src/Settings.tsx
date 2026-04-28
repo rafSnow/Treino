@@ -1,12 +1,14 @@
 import React, { useRef, useState } from 'react';
 import { db } from './db';
 import { exportDB, importDB } from 'dexie-export-import';
-import { Download, Upload, Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info } from 'lucide-react';
+import { Download, Upload, Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info, Smartphone } from 'lucide-react';
+import { useWorkoutStore } from './store';
 
 const Settings: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { installPrompt, installApp } = useWorkoutStore();
 
   const handleExport = async () => {
     try {
@@ -79,6 +81,21 @@ const Settings: React.FC = () => {
         </p>
 
         <div className="space-y-3">
+          {installPrompt && (
+            <button
+              onClick={installApp}
+              className="w-full flex items-center justify-between p-4 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20 group"
+            >
+              <div className="flex items-center gap-3">
+                <Smartphone size={20} />
+                <div className="text-left">
+                  <div className="font-bold text-sm">Instalar Aplicativo</div>
+                  <div className="text-[10px] text-white/70 uppercase">Acesso rápido na tela inicial</div>
+                </div>
+              </div>
+            </button>
+          )}
+
           <button
             onClick={handleExport}
             disabled={isExporting}
