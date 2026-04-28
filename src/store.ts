@@ -59,16 +59,30 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   },
 
   startWorkout: (rotina: Rotina) => {
-    const exercicios_realizados = rotina.exercicios.map(ex => ({
-      exercicio_id: ex.exercicio_id,
-      series: Array.from({ length: ex.series }).map(() => ({
+    const exercicios_realizados = rotina.exercicios.map(ex => {
+      const aquecimento: Serie[] = Array.from({ length: ex.series_aquecimento }).map(() => ({
         exercicio_id: ex.exercicio_id,
         concluida: false,
         carga: 0,
         repeticoes: 0,
-        tempo: ex.metas.tempo || 0
-      }))
-    }));
+        tempo: ex.metas.tempo || 0,
+        tipo: 'aquecimento'
+      }));
+
+      const trabalho: Serie[] = Array.from({ length: ex.series_trabalho }).map(() => ({
+        exercicio_id: ex.exercicio_id,
+        concluida: false,
+        carga: 0,
+        repeticoes: 0,
+        tempo: ex.metas.tempo || 0,
+        tipo: 'trabalho'
+      }));
+
+      return {
+        exercicio_id: ex.exercicio_id,
+        series: [...aquecimento, ...trabalho]
+      };
+    });
 
     set({
       activeWorkout: {

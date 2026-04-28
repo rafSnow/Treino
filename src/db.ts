@@ -7,11 +7,14 @@ export interface Exercicio {
   tipo: 'carga' | 'tempo';
   tags: string[];
   notas_padrao?: string;
+  substituicao1_id?: number;
+  substituicao2_id?: number;
 }
 
 export interface ExercicioNoTreino {
   exercicio_id: number;
-  series: number;
+  series_aquecimento: number;
+  series_trabalho: number;
   metas: {
     repeticoes?: string;
     carga?: string;
@@ -32,6 +35,7 @@ export interface Serie {
   repeticoes?: number;
   rpe?: number;
   tempo?: number;
+  tipo: 'aquecimento' | 'trabalho';
   concluida: boolean;
 }
 

@@ -26,7 +26,8 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
     if (!ex.id) return;
     const novo: ExercicioNoTreino = {
       exercicio_id: ex.id,
-      series: 3,
+      series_aquecimento: 0,
+      series_trabalho: 3,
       metas: ex.tipo === 'carga' ? { repeticoes: '10-12' } : { tempo: 60 }
     };
     setExerciciosSelecionados([...exerciciosSelecionados, novo]);
@@ -81,74 +82,83 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-1">Nome da Rotina</label>
+            <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">NOME DA FICHA</label>
             <input
               required
               type="text"
               value={nome}
               onChange={e => setNome(e.target.value)}
-              className="w-full p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-primary outline-none"
-              placeholder="Ex: Treino A - Peito e Tríceps"
+              className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-black text-lg"
+              placeholder="Ex: Treino A - Empurrar"
             />
           </div>
 
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold">Exercícios ({exerciciosSelecionados.length})</h3>
+            <div className="flex justify-between items-center px-1">
+              <h3 className="font-black text-gray-500 uppercase tracking-tighter">EXERCÍCIOS ({exerciciosSelecionados.length})</h3>
               <button
                 type="button"
                 onClick={() => setIsSelectorOpen(true)}
-                className="text-primary flex items-center gap-1 font-semibold text-sm"
+                className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1 active:scale-95 transition-all"
               >
-                <Plus size={16} /> Adicionar
+                <Plus size={14} /> ADICIONAR
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {exerciciosSelecionados.map((item, idx) => {
                 const ex = todosExercicios.find(e => e.id === item.exercicio_id);
                 return (
-                  <div key={idx} className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border dark:border-gray-600">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <span className="text-xs text-gray-500 block">#{idx + 1}</span>
-                        <h4 className="font-bold">{ex?.nome || 'Exercício não encontrado'}</h4>
+                  <div key={idx} className="bg-gray-50 dark:bg-gray-700/30 p-5 rounded-3xl border-2 border-transparent dark:border-gray-700/50">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex gap-3 items-center">
+                        <span className="w-6 h-6 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center text-[10px] font-black text-gray-500 dark:text-gray-300">
+                          {idx + 1}
+                        </span>
+                        <h4 className="font-black text-base dark:text-gray-100">{ex?.nome}</h4>
                       </div>
-                      <div className="flex gap-1">
-                        <button type="button" onClick={() => moveExercicio(idx, 'up')} className="p-1 text-gray-400 hover:text-primary"><ChevronUp size={20}/></button>
-                        <button type="button" onClick={() => moveExercicio(idx, 'down')} className="p-1 text-gray-400 hover:text-primary"><ChevronDown size={20}/></button>
-                        <button type="button" onClick={() => removeExercicio(idx)} className="p-1 text-gray-400 hover:text-red-500 ml-2"><Trash2 size={20}/></button>
+                      <div className="flex gap-1 bg-white dark:bg-gray-800 p-1 rounded-xl shadow-sm border dark:border-gray-700">
+                        <button type="button" onClick={() => moveExercicio(idx, 'up')} className="p-1.5 text-gray-400 hover:text-primary"><ChevronUp size={18}/></button>
+                        <button type="button" onClick={() => moveExercicio(idx, 'down')} className="p-1.5 text-gray-400 hover:text-primary"><ChevronDown size={18}/></button>
+                        <button type="button" onClick={() => removeExercicio(idx)} className="p-1.5 text-gray-400 hover:text-red-500 ml-1"><Trash2 size={18}/></button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] uppercase font-bold text-gray-500">Séries</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-black text-orange-500 tracking-widest pl-1">Aquec.</label>
                         <input
                           type="number"
-                          value={item.series}
-                          onChange={e => updateMeta(idx, { series: parseInt(e.target.value) || 0 })}
-                          className="w-full p-2 rounded bg-white dark:bg-gray-800 border dark:border-gray-600 text-sm"
+                          value={item.series_aquecimento}
+                          onChange={e => updateMeta(idx, { series_aquecimento: parseInt(e.target.value) || 0 })}
+                          className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-orange-500 outline-none text-center font-black"
                         />
                       </div>
-                      <div>
-                        <label className="text-[10px] uppercase font-bold text-gray-500">
-                          {ex?.tipo === 'carga' ? 'Repetições' : 'Segundos'}
-                        </label>
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-black text-primary tracking-widest pl-1">Trabalho</label>
+                        <input
+                          type="number"
+                          value={item.series_trabalho}
+                          onChange={e => updateMeta(idx, { series_trabalho: parseInt(e.target.value) || 0 })}
+                          className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-primary outline-none text-center font-black"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-widest pl-1">Meta</label>
                         {ex?.tipo === 'carga' ? (
                           <input
                             type="text"
                             value={item.metas.repeticoes || ''}
                             onChange={e => updateMeta(idx, { metas: { ...item.metas, repeticoes: e.target.value } })}
-                            placeholder="Ex: 10-12"
-                            className="w-full p-2 rounded bg-white dark:bg-gray-800 border dark:border-gray-600 text-sm"
+                            placeholder="Reps"
+                            className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-gray-400 outline-none text-center font-black text-xs"
                           />
                         ) : (
                           <input
                             type="number"
                             value={item.metas.tempo || 0}
                             onChange={e => updateMeta(idx, { metas: { ...item.metas, tempo: parseInt(e.target.value) || 0 } })}
-                            className="w-full p-2 rounded bg-white dark:bg-gray-800 border dark:border-gray-600 text-sm"
+                            className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-gray-400 outline-none text-center font-black text-xs"
                           />
                         )}
                       </div>
