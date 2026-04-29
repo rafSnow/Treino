@@ -150,6 +150,9 @@ const WorkoutSession: React.FC = () => {
         <div className="max-w-md mx-auto w-full space-y-6">
           {activeWorkout.exercicios_realizados.map((exRealizado, exIdx) => {
             const infoEx = todosExercicios.find(e => e.id === exRealizado.exercicio_id);
+            const configEx = activeWorkout.rotina.exercicios.find(
+              e => e.exercicio_id === exRealizado.exercicio_id
+            );
             const isFinished = exRealizado.series.every(s => s.concluida);
             
             return (
@@ -204,6 +207,33 @@ const WorkoutSession: React.FC = () => {
                       </div>
                     )}
 
+                    {/* Meta da Rotina */}
+                    {configEx && (
+                      <div className="flex items-center gap-2 mb-3 px-1">
+                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                          Meta:
+                        </span>
+                        <span className="bg-primary/10 text-primary text-[11px] font-black px-3 py-1 
+                                         rounded-full border border-primary/20">
+                          {configEx.series_aquecimento > 0 && (
+                            `${configEx.series_aquecimento} aquec. + `
+                          )}
+                          {configEx.series_trabalho} séries
+                          {' × '}
+                          {infoEx?.tipo === 'carga'
+                            ? `${configEx.metas.repeticoes || '?'} reps`
+                            : `${configEx.metas.tempo || '?'}s`
+                          }
+                        </span>
+                        {configEx.tempo_descanso && (
+                          <span className="bg-blue-500/10 text-blue-500 text-[11px] font-black px-3 py-1 
+                                           rounded-full border border-blue-500/20">
+                            {configEx.tempo_descanso}s descanso
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {/* Header das colunas */}
                     <div className="grid grid-cols-[30px_1fr_1fr_1fr_44px] gap-2 px-2 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">
                       <span>TIPO</span>
@@ -224,7 +254,12 @@ const WorkoutSession: React.FC = () => {
                       >
                         <div className={`flex flex-col items-center justify-center rounded-lg h-full ${serie.tipo === 'aquecimento' ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-600' : 'bg-primary/10 text-primary'}`}>
                           <span className="text-[7px] font-black uppercase tracking-tighter">{serie.tipo === 'aquecimento' ? 'AQ' : 'TR'}</span>
-                          <span className="text-[10px] font-black leading-none">{sIdx + 1}</span>
+                          <span className="text-[10px] font-black leading-none">
+                            {serie.tipo === 'trabalho'
+                              ? `${exRealizado.series.filter((s, i) => s.tipo === 'trabalho' && i <= sIdx).length}/${configEx?.series_trabalho ?? '?'}`
+                              : `${exRealizado.series.filter((s, i) => s.tipo === 'aquecimento' && i <= sIdx).length}/${configEx?.series_aquecimento ?? '?'}`
+                            }
+                          </span>
                         </div>
                         
                         <div className="relative">
@@ -244,6 +279,11 @@ const WorkoutSession: React.FC = () => {
                             inputMode="numeric"
                             className="w-full h-10 bg-white dark:bg-gray-800 rounded-xl font-black text-center outline-none border border-gray-100 dark:border-gray-700 focus:border-primary transition-colors text-sm"
                             value={infoEx?.tipo === 'carga' ? (serie.repeticoes || '') : (serie.tempo || '')}
+                            placeholder={
+                              infoEx?.tipo === 'carga'
+                                ? (configEx?.metas.repeticoes || '0')
+                                : String(configEx?.metas.tempo || '0')
+                            }
                             onChange={(e) => toggleSerie(exRealizado.exercicio_id, sIdx, infoEx?.tipo === 'carga' ? { repeticoes: parseInt(e.target.value) || 0 } : { tempo: parseInt(e.target.value) || 0 })}
                           />
                           <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">{infoEx?.tipo === 'carga' ? 'rep' : 'seg'}</span>
