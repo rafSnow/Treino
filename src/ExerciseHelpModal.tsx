@@ -17,9 +17,9 @@ const ExerciseHelpModal: React.FC<ExerciseHelpModalProps> = ({ exercise, onClose
   const videoId = exercise.video_url ? getYoutubeId(exercise.video_url) : null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[110] p-4">
-      <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-        <div className="flex justify-between items-center p-6 border-b dark:border-gray-700">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-[110]">
+      <div className="bg-white dark:bg-gray-800 w-full max-w-lg h-[90vh] sm:h-auto sm:max-h-[80vh] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-xl overflow-hidden">
+        <div className="flex justify-between items-center p-6 border-b dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 text-primary rounded-xl">
               <Info size={20} />
@@ -31,7 +31,7 @@ const ExerciseHelpModal: React.FC<ExerciseHelpModalProps> = ({ exercise, onClose
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {videoId ? (
             <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-lg">
               <iframe
@@ -61,7 +61,7 @@ const ExerciseHelpModal: React.FC<ExerciseHelpModalProps> = ({ exercise, onClose
           </div>
         </div>
 
-        <div className="p-6 bg-gray-50 dark:bg-gray-900/50">
+        <div className="p-6 pb-10 sm:pb-6 bg-gray-50 dark:bg-gray-900 border-t dark:border-gray-700">
           <button
             onClick={onClose}
             className="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-opacity-90 transition-all"

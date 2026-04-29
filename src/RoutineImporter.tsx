@@ -8,7 +8,7 @@ const RoutineImporter: React.FC = () => {
   const confirm = useConfirm();
   const [importData, setImportData] = useState<{
     n: string;
-    e: (ExercicioNoTreino & { ex: any })[];
+    e: (ExercicioNoTreino & { ex: { n: string; c: string; t: 'carga' | 'tempo'; g?: string[]; a?: string; v?: string } })[];
   } | null>(null);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ const RoutineImporter: React.FC = () => {
         for (const item of importData.e) {
           const exData = item.ex;
           // Verifica se o exercício já existe pelo nome
-          let existingEx = await db.exercicios.where('nome').equalsIgnoreCase(exData.n).first();
+          const existingEx = await db.exercicios.where('nome').equalsIgnoreCase(exData.n).first();
           
           let exerciseId: number;
           if (!existingEx) {
@@ -60,7 +60,8 @@ const RoutineImporter: React.FC = () => {
             exerciseId = existingEx.id!;
           }
 
-          const { ex, ...config } = item;
+          const { ex: _ex, ...config } = item;
+          void _ex;
           mappedExercises.push({
             ...config,
             exercicio_id: exerciseId

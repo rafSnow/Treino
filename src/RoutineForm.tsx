@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, type Exercicio, type Rotina, type ExercicioNoTreino } from './db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { X, Save, Plus, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
+import { X, Save, Plus, ChevronUp, ChevronDown, Trash2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface RoutineFormProps {
@@ -13,6 +13,7 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
   const [nome, setNome] = useState('');
   const [exerciciosSelecionados, setExerciciosSelecionados] = useState<ExercicioNoTreino[]>([]);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const [searchExercicio, setSearchExercicio] = useState('');
 
   const todosExercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
 
@@ -33,6 +34,7 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
     };
     setExerciciosSelecionados([...exerciciosSelecionados, novo]);
     setIsSelectorOpen(false);
+    setSearchExercicio('');
   };
 
   const removeExercicio = (index: number) => {
@@ -208,19 +210,34 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
           <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 max-h-[70vh] flex flex-col shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold">Selecionar Exercício</h3>
-              <button onClick={() => setIsSelectorOpen(false)} className="p-1"><X size={20}/></button>
+              <button onClick={() => { setIsSelectorOpen(false); setSearchExercicio(''); }} className="p-1"><X size={20}/></button>
             </div>
+            
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Buscar exercício..."
+                value={searchExercicio}
+                onChange={e => setSearchExercicio(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-sm font-bold outline-none focus:ring-2 focus:ring-primary"
+                autoFocus
+              />
+            </div>
+
             <div className="flex-1 overflow-y-auto space-y-2">
-              {todosExercicios.map(ex => (
-                <button
-                  key={ex.id}
-                  onClick={() => addExercicio(ex)}
-                  className="w-full text-left p-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 border dark:border-gray-700 transition-colors"
-                >
-                  <div className="font-bold">{ex.nome}</div>
-                  <div className="text-xs text-gray-500">{ex.categoria}</div>
-                </button>
-              ))}
+              {todosExercicios
+                .filter(ex => ex.nome.toLowerCase().includes(searchExercicio.toLowerCase()))
+                .map(ex => (
+                  <button
+                    key={ex.id}
+                    onClick={() => addExercicio(ex)}
+                    className="w-full text-left p-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 border dark:border-gray-700 transition-colors"
+                  >
+                    <div className="font-bold">{ex.nome}</div>
+                    <div className="text-xs text-gray-500">{ex.categoria}</div>
+                  </button>
+                ))}
               {todosExercicios.length === 0 && (
                 <p className="text-center text-gray-500 py-8">Nenhum exercício cadastrado no catálogo.</p>
               )}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { db, type Exercicio } from './db';
-import { X, Save, RefreshCw } from 'lucide-react';
+import { X, Save, RefreshCw, Search } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import toast from 'react-hot-toast';
 
@@ -14,26 +14,21 @@ const TYPES = [
   { value: 'carga', label: 'Carga / Repetições' },
   { value: 'tempo', label: 'Tempo / Distância' }
 ];
-const MOBILITY_TAGS = ['Sentado', 'Sem impacto', 'Fisioterapia', 'Mobilidade'];
 
 const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) => {
   const [nome, setNome] = useState(() => exerciseToEdit?.nome ?? '');
   const [categoria, setCategoria] = useState(() => exerciseToEdit?.categoria ?? 'Peito');
   const [tipo, setTipo] = useState<'carga' | 'tempo'>(() => exerciseToEdit?.tipo ?? 'carga');
-  const [selectedTags, setSelectedTags] = useState<string[]>(() => exerciseToEdit?.tags ?? []);
-  const [notas, setNotas] = useState(() => exerciseToEdit?.notas_padrao ?? '');
   const [ajuda, setAjuda] = useState(() => exerciseToEdit?.ajuda ?? '');
   const [videoUrl, setVideoUrl] = useState(() => exerciseToEdit?.video_url ?? '');
   const [sub1, setSub1] = useState<number | undefined>(() => exerciseToEdit?.substituicao1_id);
   const [sub2, setSub2] = useState<number | undefined>(() => exerciseToEdit?.substituicao2_id);
 
-  const todosExercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
+  const [searchSub1, setSearchSub1] = useState('');
+  const [searchSub2, setSearchSub2] = useState('');
+  const [focusedSub, setFocusedSub] = useState<1 | 2 | null>(null);
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
-  };
+  const todosExercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,8 +37,8 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
         nome,
         categoria,
         tipo,
-        tags: selectedTags,
-        notas_padrao: notas,
+        tags: exerciseToEdit?.tags ?? [],
+        notas_padrao: exerciseToEdit?.notas_padrao ?? '',
         ajuda,
         video_url: videoUrl,
         substituicao1_id: sub1,
@@ -116,57 +111,106 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
               <RefreshCw size={12} className="text-primary" /> Substituições Sugeridas
             </label>
             <div className="grid grid-cols-2 gap-3">
-              <select
-                value={sub1 || ''}
-                onChange={e => setSub1(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-xs font-bold"
-              >
-                <option value="">Nenhuma 1...</option>
-                {todosExercicios.filter(ex => ex.id !== exerciseToEdit?.id).map(ex => (
-                  <option key={ex.id} value={ex.id}>{ex.nome}</option>
-                ))}
-              </select>
-              <select
-                value={sub2 || ''}
-                onChange={e => setSub2(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-xs font-bold"
-              >
-                <option value="">Nenhuma 2...</option>
-                {todosExercicios.filter(ex => ex.id !== exerciseToEdit?.id && ex.id !== sub1).map(ex => (
-                  <option key={ex.id} value={ex.id}>{ex.nome}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+              <div className="relative">
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={14} />
+                  <input
+                    type="text"
+                    value={searchSub1}
+                    onChange={e => setSearchSub1(e.target.value)}
+                    onFocus={() => setFocusedSub(1)}
+                    onBlur={() => setTimeout(() => setFocusedSub(null), 200)}
+                    placeholder="Buscar substituição..."
+                    className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-xs font-bold outline-none focus:border-primary transition-all"
+                  />
+                </div>
+                {focusedSub === 1 && searchSub1 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 max-h-40 overflow-y-auto border border-gray-100 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 z-10 shadow-xl">
+                    {todosExercicios
+                      .filter(ex => 
+                        ex.id !== exerciseToEdit?.id && 
+                        ex.id !== sub2 && 
+                        ex.nome.toLowerCase().includes(searchSub1.toLowerCase())
+                      )
+                      .map(ex => (
+                        <button
+                          key={ex.id}
+                          type="button"
+                          onClick={() => {
+                            setSub1(ex.id);
+                            setSearchSub1('');
+                            setFocusedSub(null);
+                          }}
+                          className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-800 text-xs font-bold border-b last:border-0 border-gray-100 dark:border-gray-700"
+                        >
+                          {ex.nome}
+                        </button>
+                      ))
+                    }
+                  </div>
+                )}
+                {sub1 && (
+                  <div className="mt-2 flex">
+                    <div className="bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded-lg flex items-center gap-1 border border-primary/20">
+                      <span className="truncate max-w-[100px]">{todosExercicios.find(ex => ex.id === sub1)?.nome}</span>
+                      <button type="button" onClick={() => { setSub1(undefined); setSearchSub1(''); }} className="hover:text-red-500 transition-colors">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-          <div>
-            <label className="block text-[10px] font-bold mb-2 text-gray-400 uppercase tracking-widest">Tags Rápidas</label>
-            <div className="flex flex-wrap gap-2">
-              {MOBILITY_TAGS.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1.5 rounded-xl border-2 text-xs font-black transition-all ${
-                    selectedTags.includes(tag)
-                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
-                      : 'border-gray-100 dark:border-gray-700 text-gray-400'
-                  }`}
-                >
-                  {tag.toUpperCase()}
-                </button>
-              ))}
+              <div className="relative">
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={14} />
+                  <input
+                    type="text"
+                    value={searchSub2}
+                    onChange={e => setSearchSub2(e.target.value)}
+                    onFocus={() => setFocusedSub(2)}
+                    onBlur={() => setTimeout(() => setFocusedSub(null), 200)}
+                    placeholder="Buscar substituição..."
+                    className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-xs font-bold outline-none focus:border-primary transition-all"
+                  />
+                </div>
+                {focusedSub === 2 && searchSub2 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 max-h-40 overflow-y-auto border border-gray-100 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 z-10 shadow-xl">
+                    {todosExercicios
+                      .filter(ex => 
+                        ex.id !== exerciseToEdit?.id && 
+                        ex.id !== sub1 && 
+                        ex.nome.toLowerCase().includes(searchSub2.toLowerCase())
+                      )
+                      .map(ex => (
+                        <button
+                          key={ex.id}
+                          type="button"
+                          onClick={() => {
+                            setSub2(ex.id);
+                            setSearchSub2('');
+                            setFocusedSub(null);
+                          }}
+                          className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-800 text-xs font-bold border-b last:border-0 border-gray-100 dark:border-gray-700"
+                        >
+                          {ex.nome}
+                        </button>
+                      ))
+                    }
+                  </div>
+                )}
+                {sub2 && (
+                  <div className="mt-2 flex">
+                    <div className="bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded-lg flex items-center gap-1 border border-primary/20">
+                      <span className="truncate max-w-[100px]">{todosExercicios.find(ex => ex.id === sub2)?.nome}</span>
+                      <button type="button" onClick={() => { setSub2(undefined); setSearchSub2(''); }} className="hover:text-red-500 transition-colors">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Notas Padrão (Privadas)</label>
-            <textarea
-              value={notas}
-              onChange={e => setNotas(e.target.value)}
-              className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none h-20 resize-none font-medium text-base"
-              placeholder="Ex: Ajustar banco no nível 3"
-            />
           </div>
 
           <div className="space-y-4 pt-4 border-t dark:border-gray-700">
