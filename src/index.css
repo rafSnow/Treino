@@ -33,7 +33,6 @@ body {
 /* Melhorar áreas de toque */
 button, input, select, textarea {
   touch-action: manipulation;
-  font-size: 16px !important; /* Evita o zoom automático no iPhone ao focar inputs */
 }
 
 /* Utilidades de Scroll */

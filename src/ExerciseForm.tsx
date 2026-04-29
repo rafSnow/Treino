@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { db, type Exercicio } from './db';
 import { X, Save, RefreshCw } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import toast from 'react-hot-toast';
 
 interface ExerciseFormProps {
   exerciseToEdit?: Exercicio;
@@ -16,27 +17,17 @@ const TYPES = [
 const MOBILITY_TAGS = ['Sentado', 'Sem impacto', 'Fisioterapia', 'Mobilidade'];
 
 const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) => {
-  const [nome, setNome] = useState('');
-  const [categoria, setCategoria] = useState('Peito');
-  const [tipo, setTipo] = useState<'carga' | 'tempo'>('carga');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [notas, setNotas] = useState('');
-  const [sub1, setSub1] = useState<number | undefined>();
-  const [sub2, setSub2] = useState<number | undefined>();
+  const [nome, setNome] = useState(() => exerciseToEdit?.nome ?? '');
+  const [categoria, setCategoria] = useState(() => exerciseToEdit?.categoria ?? 'Peito');
+  const [tipo, setTipo] = useState<'carga' | 'tempo'>(() => exerciseToEdit?.tipo ?? 'carga');
+  const [selectedTags, setSelectedTags] = useState<string[]>(() => exerciseToEdit?.tags ?? []);
+  const [notas, setNotas] = useState(() => exerciseToEdit?.notas_padrao ?? '');
+  const [ajuda, setAjuda] = useState(() => exerciseToEdit?.ajuda ?? '');
+  const [videoUrl, setVideoUrl] = useState(() => exerciseToEdit?.video_url ?? '');
+  const [sub1, setSub1] = useState<number | undefined>(() => exerciseToEdit?.substituicao1_id);
+  const [sub2, setSub2] = useState<number | undefined>(() => exerciseToEdit?.substituicao2_id);
 
   const todosExercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
-
-  useEffect(() => {
-    if (exerciseToEdit) {
-      setNome(exerciseToEdit.nome);
-      setCategoria(exerciseToEdit.categoria);
-      setTipo(exerciseToEdit.tipo);
-      setSelectedTags(exerciseToEdit.tags);
-      setNotas(exerciseToEdit.notas_padrao || '');
-      setSub1(exerciseToEdit.substituicao1_id);
-      setSub2(exerciseToEdit.substituicao2_id);
-    }
-  }, [exerciseToEdit]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev => 
@@ -46,23 +37,32 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const data: Exercicio = {
-      nome,
-      categoria,
-      tipo,
-      tags: selectedTags,
-      notas_padrao: notas,
-      substituicao1_id: sub1,
-      substituicao2_id: sub2
-    };
+    try {
+      const data: Exercicio = {
+        nome,
+        categoria,
+        tipo,
+        tags: selectedTags,
+        notas_padrao: notas,
+        ajuda,
+        video_url: videoUrl,
+        substituicao1_id: sub1,
+        substituicao2_id: sub2
+      };
 
-    if (exerciseToEdit?.id) {
-      const updateData: Partial<Exercicio> = data;
-      await db.exercicios.update(exerciseToEdit.id, updateData);
-    } else {
-      await db.exercicios.add(data);
+      if (exerciseToEdit?.id) {
+        const updateData: Partial<Exercicio> = data;
+        await db.exercicios.update(exerciseToEdit.id, updateData);
+        toast.success('Exercício atualizado!');
+      } else {
+        await db.exercicios.add(data);
+        toast.success('Exercício criado!');
+      }
+      onClose();
+    } catch (error) {
+      console.error('Falha ao salvar exercício:', error);
+      toast.error('Erro ao salvar exercício.');
     }
-    onClose();
   };
 
   return (
@@ -83,7 +83,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
               type="text"
               value={nome}
               onChange={e => setNome(e.target.value)}
-              className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold"
+              className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold text-base"
               placeholder="Ex: Supino Reto"
             />
           </div>
@@ -94,7 +94,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
               <select
                 value={categoria}
                 onChange={e => setCategoria(e.target.value)}
-                className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none font-bold"
+                className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none font-bold text-base"
               >
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -104,7 +104,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
               <select
                 value={tipo}
                 onChange={e => setTipo(e.target.value as 'carga' | 'tempo')}
-                className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none font-bold"
+                className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none font-bold text-base"
               >
                 {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
@@ -112,7 +112,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold mb-2 text-gray-400 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-[10px] font-bold mb-2 text-gray-400 uppercase tracking-widest flex items-center gap-2">
               <RefreshCw size={12} className="text-primary" /> Substituições Sugeridas
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -160,13 +160,38 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Notas Padrão</label>
+            <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Notas Padrão (Privadas)</label>
             <textarea
               value={notas}
               onChange={e => setNotas(e.target.value)}
-              className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none h-24 resize-none font-medium"
+              className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none h-20 resize-none font-medium text-base"
               placeholder="Ex: Ajustar banco no nível 3"
             />
+          </div>
+
+          <div className="space-y-4 pt-4 border-t dark:border-gray-700">
+            <h3 className="text-xs font-black text-primary uppercase tracking-widest">Ajuda e Vídeo (Público no Compartilhamento)</h3>
+            
+            <div>
+              <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Instruções de Execução</label>
+              <textarea
+                value={ajuda}
+                onChange={e => setAjuda(e.target.value)}
+                className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none h-24 resize-none font-medium text-base"
+                placeholder="Como realizar o exercício corretamente..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">URL do Vídeo (YouTube)</label>
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={e => setVideoUrl(e.target.value)}
+                className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none font-bold text-base"
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+            </div>
           </div>
 
           <button

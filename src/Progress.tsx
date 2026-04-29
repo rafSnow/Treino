@@ -12,7 +12,7 @@ const Progress: React.FC = () => {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
   const exercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
-  const sessoes = useLiveQuery(() => db.sessoes.toArray()) || [];
+  const sessoes = useLiveQuery(() => db.sessoes.toArray());
 
   const chartData = useMemo(() => {
     if (!selectedExerciseId || !sessoes) return [];

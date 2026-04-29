@@ -1,13 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWorkoutStore } from './store';
-import { db } from './db';
+import { db, type Exercicio } from './db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { CheckCircle2, Circle, Clock, ChevronRight, XCircle, TrendingUp, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, ChevronRight, XCircle, TrendingUp, RefreshCw, Info } from 'lucide-react';
+import { useConfirm } from './ConfirmDialog';
+import ExerciseHelpModal from './ExerciseHelpModal';
 
 const WorkoutSession: React.FC = () => {
   const { activeWorkout, restTimer, isTimerActive, tickTimer, toggleSerie, finishWorkout, stopTimer } = useWorkoutStore();
+  const [helpExercise, setHelpExercise] = useState<Exercicio | null>(null);
   const todosExercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
   const sessoesPassadas = useLiveQuery(() => db.sessoes.orderBy('data_inicio').reverse().toArray()) || [];
+  const confirm = useConfirm();
 
   const playBeep = () => {
     // @ts-expect-error - Handling vendor prefix for legacy browsers
@@ -57,27 +61,39 @@ const WorkoutSession: React.FC = () => {
   };
 
   const handleFinish = async () => {
-    if (confirm('Deseja finalizar o treino agora?')) {
-      const sessao = {
-        rotina_id: activeWorkout.rotina.id,
-        data_inicio: activeWorkout.data_inicio,
-        data_fim: new Date(),
-        exercicios_realizados: activeWorkout.exercicios_realizados
-      };
-      await db.sessoes.add(sessao);
-      finishWorkout();
+    if (await confirm({
+      title: 'Finalizar Treino',
+      message: 'Deseja finalizar o treino agora? Os dados serão salvos no histórico.',
+      confirmLabel: 'Finalizar',
+      variant: 'primary'
+    })) {
+      try {
+        await finishWorkout();
+      } catch (err) {
+        console.error('Falha ao finalizar treino:', err);
+      }
     }
   };
 
-  const handleCancel = () => {
-    if (confirm('Tem certeza que deseja cancelar o treino? Os dados não serão salvos.')) {
-      finishWorkout();
+  const handleCancel = async () => {
+    if (await confirm({
+      title: 'Cancelar Treino',
+      message: 'Tem certeza que deseja cancelar o treino? Os dados não serão salvos.',
+      confirmLabel: 'Sim, Cancelar',
+      variant: 'danger'
+    })) {
+      // Para cancelar sem salvar, podemos simplesmente limpar a store
+      useWorkoutStore.setState({ activeWorkout: null, isTimerActive: false, restTimer: 0 });
     }
   };
 
   const totalSeries = activeWorkout.exercicios_realizados.reduce((acc, ex) => acc + ex.series.length, 0);
   const seriesConcluidas = activeWorkout.exercicios_realizados.reduce(
     (acc, ex) => acc + ex.series.filter(s => s.concluida).length, 0
+  );
+  const totalVolume = activeWorkout.exercicios_realizados.reduce(
+    (acc, ex) => acc + ex.series.filter(s => s.concluida).reduce((sAcc, s) => sAcc + (s.carga || 0) * (s.repeticoes || 0), 0),
+    0
   );
   const progresso = (seriesConcluidas / totalSeries) * 100;
 
@@ -87,11 +103,17 @@ const WorkoutSession: React.FC = () => {
       <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b dark:border-gray-800 z-30 shadow-sm">
         <div className="max-w-md mx-auto px-4 py-3">
           <div className="flex justify-between items-center mb-2">
-            <div className="overflow-hidden">
+            <div className="overflow-hidden flex-1">
               <h2 className="font-black text-lg truncate tracking-tight">{activeWorkout.rotina.nome}</h2>
-              <div className="flex items-center gap-2">
-                <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sessão em andamento</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sessão em andamento</p>
+                </div>
+                <div className="flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-lg text-primary font-black text-[10px] border border-primary/20">
+                  <TrendingUp size={10} />
+                  <span>{totalVolume.toLocaleString()} kg VOLUME</span>
+                </div>
               </div>
             </div>
             
@@ -141,7 +163,15 @@ const WorkoutSession: React.FC = () => {
                       {exIdx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-black text-lg leading-tight truncate dark:text-gray-100">{infoEx?.nome}</h3>
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-black text-lg leading-tight truncate dark:text-gray-100">{infoEx?.nome}</h3>
+                        <button 
+                          onClick={() => infoEx && setHelpExercise(infoEx)}
+                          className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        >
+                          <Info size={18} />
+                        </button>
+                      </div>
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <span className="text-[10px] bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-gray-500 dark:text-gray-400 font-bold uppercase tracking-tighter">
                           {infoEx?.categoria}
@@ -270,6 +300,13 @@ const WorkoutSession: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {helpExercise && (
+        <ExerciseHelpModal 
+          exercise={helpExercise} 
+          onClose={() => setHelpExercise(null)} 
+        />
+      )}
     </div>
   );
 };

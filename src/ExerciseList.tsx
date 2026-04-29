@@ -3,12 +3,14 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Exercicio } from './db';
 import { Search, Plus, Edit2, Trash2, Filter } from 'lucide-react';
 import ExerciseForm from './ExerciseForm';
+import { useConfirm } from './ConfirmDialog';
 
 const ExerciseList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<Exercicio | undefined>();
+  const confirm = useConfirm();
 
   const exercicios = useLiveQuery(
     async () => {
@@ -33,8 +35,37 @@ const ExerciseList: React.FC = () => {
   );
 
   const handleDelete = async (id: number, nome: string) => {
-    if (confirm(`Tem certeza que deseja excluir o exercício "${nome}"?`)) {
-      await db.exercicios.delete(id);
+    // 3.4 Deleção sem Verificação de Integridade Referencial
+    const rotinasUsando = await db.rotinas
+      .filter(r => r.exercicios.some(e => e.exercicio_id === id))
+      .count();
+
+    const sessoesUsando = await db.sessoes
+      .filter(s => s.exercicios_realizados.some(e => e.exercicio_id === id))
+      .count();
+
+    if (rotinasUsando > 0 || sessoesUsando > 0) {
+      await confirm({
+        title: 'Não é possível excluir',
+        message: `O exercício "${nome}" está sendo usado em ${rotinasUsando} rotina(s) e ${sessoesUsando} treino(s) salvo(s). Para manter a integridade dos seus dados, você não pode excluí-lo.`,
+        confirmLabel: 'Entendido',
+        variant: 'primary'
+      });
+      return;
+    }
+
+    if (await confirm({
+      title: 'Excluir Exercício',
+      message: `Tem certeza que deseja excluir o exercício "${nome}"?`,
+      confirmLabel: 'Excluir',
+      variant: 'danger'
+    })) {
+      try {
+        await db.exercicios.delete(id);
+      } catch (error) {
+        console.error('Falha ao excluir exercício:', error);
+        alert('Erro ao excluir exercício.');
+      }
     }
   };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, type Exercicio, type Rotina, type ExercicioNoTreino } from './db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { X, Save, Plus, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface RoutineFormProps {
   routineToEdit?: Rotina;
@@ -56,18 +57,25 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
     e.preventDefault();
     if (!nome || exerciciosSelecionados.length === 0) return;
 
-    const data: Rotina = {
-      nome,
-      exercicios: exerciciosSelecionados
-    };
+    try {
+      const data: Rotina = {
+        nome,
+        exercicios: exerciciosSelecionados
+      };
 
-    if (routineToEdit?.id) {
-      const updateData: Partial<Rotina> = data;
-      await db.rotinas.update(routineToEdit.id, updateData);
-    } else {
-      await db.rotinas.add(data);
+      if (routineToEdit?.id) {
+        const updateData: Partial<Rotina> = data;
+        await db.rotinas.update(routineToEdit.id, updateData);
+        toast.success('Rotina atualizada!');
+      } else {
+        await db.rotinas.add(data);
+        toast.success('Rotina criada!');
+      }
+      onClose();
+    } catch (error) {
+      console.error('Falha ao salvar rotina:', error);
+      toast.error('Erro ao salvar rotina.');
     }
-    onClose();
   };
 
   return (
@@ -88,7 +96,7 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
               type="text"
               value={nome}
               onChange={e => setNome(e.target.value)}
-              className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-black text-lg"
+              className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-black text-base"
               placeholder="Ex: Treino A - Empurrar"
             />
           </div>
@@ -124,7 +132,7 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="space-y-1">
                         <label className="text-[9px] uppercase font-black text-orange-500 tracking-widest pl-1">Aquec.</label>
                         <input
@@ -161,6 +169,18 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
                             className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-gray-400 outline-none text-center font-black text-xs"
                           />
                         )}
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-black text-blue-500 tracking-widest pl-1">Descanso</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={item.tempo_descanso || 60}
+                            onChange={e => updateMeta(idx, { tempo_descanso: parseInt(e.target.value) || 0 })}
+                            className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-blue-500 outline-none text-center font-black text-xs"
+                          />
+                          <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">seg</span>
+                        </div>
                       </div>
                     </div>
                   </div>

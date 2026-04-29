@@ -65,7 +65,10 @@ const History: React.FC = () => {
                   <div key={d} className="text-center text-[10px] font-bold text-gray-400 py-1">{d}</div>
                 ))}
                 {days.map(day => {
-                  const hasWorkout = sessoes?.some(s => isSameDay(new Date(s.data_inicio), day));
+                  const hasWorkout = sessoes?.some(s => {
+                    const workoutDate = new Date(s.data_inicio);
+                    return isSameDay(workoutDate, day);
+                  });
                   return (
                     <div
                       key={day.toString()}
@@ -94,10 +97,21 @@ const History: React.FC = () => {
                         {format(new Date(sessao.data_inicio), "PPP 'às' p", { locale: ptBR })}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex flex-col items-end gap-1">
                       <span className="text-[10px] font-bold bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full uppercase">
                         {sessao.exercicios_realizados.length} Exercícios
                       </span>
+                      {(() => {
+                        const vol = sessao.exercicios_realizados.reduce(
+                          (acc, ex) => acc + ex.series.filter(s => s.concluida).reduce((sAcc, s) => sAcc + (s.carga || 0) * (s.repeticoes || 0), 0),
+                          0
+                        );
+                        return vol > 0 ? (
+                          <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                            {vol.toLocaleString()}kg VOLUME
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                   
