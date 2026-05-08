@@ -218,7 +218,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
         }
       },
       tickTimer: () => set((state) => {
-        if (state.restTimer <= 1) return { isTimerActive: false, restTimer: 0 };
+        if (state.restTimer <= 0) return { isTimerActive: false, restTimer: 0 };
         return { restTimer: state.restTimer - 1 };
       })
     }),

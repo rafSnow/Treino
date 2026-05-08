@@ -6,29 +6,44 @@ declare let self: ServiceWorkerGlobalScope;
 precacheAndRoute(self.__WB_MANIFEST);
 
 let timerId: ReturnType<typeof setTimeout> | null = null;
+let timerResolve: (() => void) | null = null;
 
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'START_REST_TIMER') {
     const { delay, title, body } = event.data;
     
     // Cancela timer anterior se houver
-    if (timerId) clearTimeout(timerId);
+    if (timerId) {
+      clearTimeout(timerId);
+      if (timerResolve) timerResolve();
+    }
 
-    timerId = setTimeout(() => {
-      self.registration.showNotification(title, {
-        body,
-        icon: '/Treino/favicon.svg', // Ajustado para o base path
-        badge: '/Treino/favicon.svg',
-        tag: 'rest-timer'
-      });
-      timerId = null;
-    }, delay);
+    const promise = new Promise<void>((resolve) => {
+      timerResolve = resolve;
+      timerId = setTimeout(() => {
+        self.registration.showNotification(title, {
+          body,
+          icon: '/Treino/favicon.svg',
+          badge: '/Treino/favicon.svg',
+          tag: 'rest-timer'
+        });
+        timerId = null;
+        timerResolve = null;
+        resolve();
+      }, delay);
+    });
+
+    event.waitUntil(promise);
   }
 
   if (event.data && event.data.type === 'CANCEL_REST_TIMER') {
     if (timerId) {
       clearTimeout(timerId);
       timerId = null;
+    }
+    if (timerResolve) {
+      timerResolve();
+      timerResolve = null;
     }
   }
 });
