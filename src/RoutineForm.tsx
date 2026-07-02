@@ -1,32 +1,189 @@
 import React, { useState, useEffect } from 'react';
 import { db, type Exercicio, type Rotina, type ExercicioNoTreino } from './db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { X, Save, Plus, ChevronUp, ChevronDown, Trash2, Search } from 'lucide-react';
+import { X, Save, Plus, Trash2, Search, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+type ExercicioEditavel = ExercicioNoTreino & { _uid: string };
 
 interface RoutineFormProps {
   routineToEdit?: Rotina;
   onClose: () => void;
 }
 
+// Sortable Item Component
+function SortableExerciseCard({ 
+  item, 
+  idx, 
+  ex, 
+  removeExercicio, 
+  updateMeta 
+}: { 
+  item: ExercicioEditavel; 
+  idx: number; 
+  ex?: Exercicio;
+  removeExercicio: (id: string) => void;
+  updateMeta: (id: string, updates: Partial<ExercicioNoTreino>) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item._uid });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.9 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={`bg-gray-50 dark:bg-gray-700/30 p-5 rounded-3xl border-2 transition-colors ${
+        isDragging ? 'border-primary shadow-xl' : 'border-transparent dark:border-gray-700/50'
+      }`}
+    >
+      <div className="flex justify-between items-start mb-4 gap-2">
+        <div 
+          {...attributes} 
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 mt-1 text-gray-400 hover:text-primary transition-colors touch-none"
+        >
+          <GripVertical size={20} />
+        </div>
+        <div className="flex-1 flex gap-3 items-center">
+          <span className="w-6 h-6 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center text-[10px] font-black text-gray-500 dark:text-gray-300">
+            {idx + 1}
+          </span>
+          <h4 className="font-black text-base dark:text-gray-100">{ex?.nome}</h4>
+        </div>
+        <button type="button" onClick={() => removeExercicio(item._uid)} className="p-1.5 text-gray-400 hover:text-red-500 ml-1">
+          <Trash2 size={18}/>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pl-8">
+        <div className="space-y-1">
+          <label className="text-[9px] uppercase font-black text-orange-500 tracking-widest pl-1">Aquec.</label>
+          <input
+            type="number"
+            value={item.series_aquecimento}
+            onChange={e => updateMeta(item._uid, { series_aquecimento: parseInt(e.target.value) || 0 })}
+            className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-orange-500 outline-none text-center font-black"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[9px] uppercase font-black text-primary tracking-widest pl-1">Trabalho</label>
+          <input
+            type="number"
+            value={item.series_trabalho}
+            onChange={e => updateMeta(item._uid, { series_trabalho: parseInt(e.target.value) || 0 })}
+            className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-primary outline-none text-center font-black"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[9px] uppercase font-black text-gray-400 tracking-widest pl-1">Meta</label>
+          {ex?.tipo === 'carga' ? (
+            <input
+              type="text"
+              value={item.metas.repeticoes || ''}
+              onChange={e => updateMeta(item._uid, { metas: { ...item.metas, repeticoes: e.target.value } })}
+              placeholder="Reps"
+              className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-gray-400 outline-none text-center font-black text-xs"
+            />
+          ) : (
+            <input
+              type="number"
+              value={item.metas.tempo || 0}
+              onChange={e => updateMeta(item._uid, { metas: { ...item.metas, tempo: parseInt(e.target.value) || 0 } })}
+              className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-gray-400 outline-none text-center font-black text-xs"
+            />
+          )}
+        </div>
+        <div className="space-y-1">
+          <label className="text-[9px] uppercase font-black text-blue-500 tracking-widest pl-1">Descanso</label>
+          <div className="relative">
+            <input
+              type="number"
+              value={item.tempo_descanso || 60}
+              onChange={e => updateMeta(item._uid, { tempo_descanso: parseInt(e.target.value) || 0 })}
+              className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-blue-500 outline-none text-center font-black text-xs"
+            />
+            <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">seg</span>
+          </div>
+        </div>
+        <div className="space-y-1">
+          <label className="text-[9px] uppercase font-black text-purple-500 tracking-widest pl-1">Biset</label>
+          <input
+            type="text"
+            maxLength={2}
+            value={item.grupo || ''}
+            onChange={e => updateMeta(item._uid, { grupo: e.target.value.toUpperCase() })}
+            placeholder="A, B"
+            className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-purple-500 outline-none text-center font-black text-xs uppercase"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => {
   const [nome, setNome] = useState('');
-  const [exerciciosSelecionados, setExerciciosSelecionados] = useState<ExercicioNoTreino[]>([]);
+  const [exerciciosSelecionados, setExerciciosSelecionados] = useState<ExercicioEditavel[]>([]);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [searchExercicio, setSearchExercicio] = useState('');
 
   const todosExercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     if (routineToEdit) {
       setNome(routineToEdit.nome);
-      setExerciciosSelecionados(routineToEdit.exercicios);
+      setExerciciosSelecionados(
+        routineToEdit.exercicios.map(ex => ({ ...ex, _uid: Math.random().toString(36).substr(2, 9) }))
+      );
     }
   }, [routineToEdit]);
 
   const addExercicio = (ex: Exercicio) => {
     if (!ex.id) return;
-    const novo: ExercicioNoTreino = {
+    const novo: ExercicioEditavel = {
+      _uid: Math.random().toString(36).substr(2, 9),
       exercicio_id: ex.id,
       series_aquecimento: 0,
       series_trabalho: 3,
@@ -37,22 +194,26 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
     setSearchExercicio('');
   };
 
-  const removeExercicio = (index: number) => {
-    setExerciciosSelecionados(exerciciosSelecionados.filter((_, i) => i !== index));
+  const removeExercicio = (id: string) => {
+    setExerciciosSelecionados(exerciciosSelecionados.filter((ex) => ex._uid !== id));
   };
 
-  const moveExercicio = (index: number, direction: 'up' | 'down') => {
-    const newArr = [...exerciciosSelecionados];
-    const target = direction === 'up' ? index - 1 : index + 1;
-    if (target < 0 || target >= newArr.length) return;
-    [newArr[index], newArr[target]] = [newArr[target], newArr[index]];
-    setExerciciosSelecionados(newArr);
+  const updateMeta = (id: string, updates: Partial<ExercicioNoTreino>) => {
+    setExerciciosSelecionados(
+      exerciciosSelecionados.map((ex) => (ex._uid === id ? { ...ex, ...updates } : ex))
+    );
   };
 
-  const updateMeta = (index: number, updates: Partial<ExercicioNoTreino>) => {
-    const newArr = [...exerciciosSelecionados];
-    newArr[index] = { ...newArr[index], ...updates };
-    setExerciciosSelecionados(newArr);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      setExerciciosSelecionados((items) => {
+        const oldIndex = items.findIndex((item) => item._uid === active.id);
+        const newIndex = items.findIndex((item) => item._uid === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,14 +221,14 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
     if (!nome || exerciciosSelecionados.length === 0) return;
 
     try {
+      // Remove _uid before saving
       const data: Rotina = {
         nome,
-        exercicios: exerciciosSelecionados
+        exercicios: exerciciosSelecionados.map(({ _uid, ...rest }) => rest)
       };
 
       if (routineToEdit?.id) {
-        const updateData: Partial<Rotina> = data;
-        await db.rotinas.update(routineToEdit.id, updateData);
+        await db.rotinas.update(routineToEdit.id, data);
         toast.success('Rotina atualizada!');
       } else {
         await db.rotinas.add(data);
@@ -115,80 +276,32 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
               </button>
             </div>
 
-            <div className="space-y-4">
-              {exerciciosSelecionados.map((item, idx) => {
-                const ex = todosExercicios.find(e => e.id === item.exercicio_id);
-                return (
-                  <div key={idx} className="bg-gray-50 dark:bg-gray-700/30 p-5 rounded-3xl border-2 border-transparent dark:border-gray-700/50">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex gap-3 items-center">
-                        <span className="w-6 h-6 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center text-[10px] font-black text-gray-500 dark:text-gray-300">
-                          {idx + 1}
-                        </span>
-                        <h4 className="font-black text-base dark:text-gray-100">{ex?.nome}</h4>
-                      </div>
-                      <div className="flex gap-1 bg-white dark:bg-gray-800 p-1 rounded-xl shadow-sm border dark:border-gray-700">
-                        <button type="button" onClick={() => moveExercicio(idx, 'up')} className="p-1.5 text-gray-400 hover:text-primary"><ChevronUp size={18}/></button>
-                        <button type="button" onClick={() => moveExercicio(idx, 'down')} className="p-1.5 text-gray-400 hover:text-primary"><ChevronDown size={18}/></button>
-                        <button type="button" onClick={() => removeExercicio(idx)} className="p-1.5 text-gray-400 hover:text-red-500 ml-1"><Trash2 size={18}/></button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-orange-500 tracking-widest pl-1">Aquec.</label>
-                        <input
-                          type="number"
-                          value={item.series_aquecimento}
-                          onChange={e => updateMeta(idx, { series_aquecimento: parseInt(e.target.value) || 0 })}
-                          className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-orange-500 outline-none text-center font-black"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-primary tracking-widest pl-1">Trabalho</label>
-                        <input
-                          type="number"
-                          value={item.series_trabalho}
-                          onChange={e => updateMeta(idx, { series_trabalho: parseInt(e.target.value) || 0 })}
-                          className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-primary outline-none text-center font-black"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-widest pl-1">Meta</label>
-                        {ex?.tipo === 'carga' ? (
-                          <input
-                            type="text"
-                            value={item.metas.repeticoes || ''}
-                            onChange={e => updateMeta(idx, { metas: { ...item.metas, repeticoes: e.target.value } })}
-                            placeholder="Reps"
-                            className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-gray-400 outline-none text-center font-black text-xs"
-                          />
-                        ) : (
-                          <input
-                            type="number"
-                            value={item.metas.tempo || 0}
-                            onChange={e => updateMeta(idx, { metas: { ...item.metas, tempo: parseInt(e.target.value) || 0 } })}
-                            className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-gray-400 outline-none text-center font-black text-xs"
-                          />
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-blue-500 tracking-widest pl-1">Descanso</label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={item.tempo_descanso || 60}
-                            onChange={e => updateMeta(idx, { tempo_descanso: parseInt(e.target.value) || 0 })}
-                            className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-blue-500 outline-none text-center font-black text-xs"
-                          />
-                          <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">seg</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <DndContext 
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext 
+                items={exerciciosSelecionados.map(i => i._uid)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-4">
+                  {exerciciosSelecionados.map((item, idx) => {
+                    const ex = todosExercicios.find(e => e.id === item.exercicio_id);
+                    return (
+                      <SortableExerciseCard
+                        key={item._uid}
+                        item={item}
+                        idx={idx}
+                        ex={ex}
+                        removeExercicio={removeExercicio}
+                        updateMeta={updateMeta}
+                      />
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
         </form>
 

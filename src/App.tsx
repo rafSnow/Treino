@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import ExerciseList from './ExerciseList'
-import { Dumbbell, History as HistoryIcon, Settings as SettingsIcon, Play, Scale } from 'lucide-react'
+import { Dumbbell, History as HistoryIcon, Settings as SettingsIcon, Play, Scale, HeartPulse } from 'lucide-react'
 
 import RoutineList from './RoutineList'
 import WorkoutSession from './WorkoutSession'
 import History from './History'
 import Settings from './Settings'
 import Biometrics from './Biometrics'
+import Cardio from './Cardio'
 import { useWorkoutStore } from './store'
 import { ConfirmProvider } from './ConfirmDialog'
 import { Toaster } from 'react-hot-toast'
@@ -16,7 +17,7 @@ import { db } from './db'
 
 import RoutineImporter from './RoutineImporter'
 
-type Tab = 'catalog' | 'workout' | 'history' | 'biometrics' | 'settings'
+type Tab = 'catalog' | 'workout' | 'history' | 'biometrics' | 'cardio' | 'settings'
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('workout')
@@ -51,13 +52,15 @@ function App() {
     const renderTabContent = () => {
       switch (activeTab) {
         case 'catalog':
-          return <ExerciseList />
+          return <ExerciseList onBack={() => setActiveTab('workout')} />
         case 'workout':
-          return <RoutineList />
+          return <RoutineList onOpenCatalog={() => setActiveTab('catalog')} />
         case 'history':
           return <History />
         case 'biometrics':
           return <Biometrics />
+        case 'cardio':
+          return <Cardio />
         case 'settings':
           return <Settings />
         default:
@@ -79,8 +82,8 @@ function App() {
           <div className="max-w-md mx-auto flex justify-around items-center">
             {[
               { id: 'workout', icon: Play, label: 'Treinar' },
-              { id: 'catalog', icon: Dumbbell, label: 'Catálogo' },
               { id: 'history', icon: HistoryIcon, label: 'Histórico' },
+              { id: 'cardio', icon: HeartPulse, label: 'Cardio' },
               { id: 'biometrics', icon: Scale, label: 'Corpo' },
               { id: 'settings', icon: SettingsIcon, label: 'Ajustes' }
             ].map((tab) => (

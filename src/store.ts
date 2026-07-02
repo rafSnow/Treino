@@ -2,12 +2,15 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { db, type Rotina, type Serie, type SessaoTreino } from './db';
 import toast from 'react-hot-toast';
+import confetti from 'canvas-confetti';
 
 interface ActiveWorkout {
   rotina: Rotina;
   data_inicio: Date;
+  notas?: string;
   exercicios_realizados: {
     exercicio_id: number;
+    notas?: string;
     series: Serie[];
   }[];
 }
@@ -30,6 +33,8 @@ interface WorkoutStore {
   startWorkout: (rotina: Rotina) => void;
   finishWorkout: () => Promise<void>;
   toggleSerie: (exercicio_id: number, serieIndex: number, data: Partial<Serie>) => void;
+  setSessaoNotas: (notas: string) => void;
+  setExercicioNotas: (exercicio_id: number, notas: string) => void;
   
   // Timer actions
   startTimer: (seconds: number) => void;
@@ -110,6 +115,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
             rotina_id: activeWorkout.rotina.id,
             data_inicio: activeWorkout.data_inicio,
             data_fim: new Date(),
+            notas: activeWorkout.notas,
             exercicios_realizados: activeWorkout.exercicios_realizados
           };
           
@@ -121,6 +127,22 @@ export const useWorkoutStore = create<WorkoutStore>()(
           toast.error('Erro ao salvar o treino.');
           throw error;
         }
+      },
+
+      setSessaoNotas: (notas: string) => {
+        const { activeWorkout } = get();
+        if (activeWorkout) {
+          set({ activeWorkout: { ...activeWorkout, notas } });
+        }
+      },
+
+      setExercicioNotas: (exercicio_id: number, notas: string) => {
+        const { activeWorkout } = get();
+        if (!activeWorkout) return;
+        const newExercicios = activeWorkout.exercicios_realizados.map(ex => 
+          ex.exercicio_id === exercicio_id ? { ...ex, notas } : ex
+        );
+        set({ activeWorkout: { ...activeWorkout, exercicios_realizados: newExercicios } });
       },
 
       checkAndRecordPR: async (exercicio_id, carga, reps) => {
@@ -156,6 +178,21 @@ export const useWorkoutStore = create<WorkoutStore>()(
               border: '2px solid rgba(255,255,255,0.2)'
             }
           });
+
+          // Check config and trigger effects
+          const confs = await db.configuracoes.toArray();
+          const vibracao = confs.find(c => c.chave === 'vibracao')?.valor !== false;
+          
+          if (vibracao && 'vibrate' in navigator) {
+            navigator.vibrate([200, 100, 200, 100, 500]);
+          }
+
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#00C896', '#ffffff', '#FFD700']
+          });
         }
       },
 
@@ -187,8 +224,25 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         // Se a série foi concluída, inicia o timer e verifica PR
         if (data.concluida && updatedSerie) {
-          get().startTimer(tempoDescanso);
           get().checkAndRecordPR(exercicio_id, updatedSerie.carga || 0, updatedSerie.repeticoes || updatedSerie.tempo || 0);
+
+          // Lógica de Biset: Só dispara o timer se for o último exercício do grupo para esta rodada
+          let shouldStartTimer = true;
+          if (configExercicio?.grupo) {
+            // Verifica se há outro exercício no mesmo grupo onde a série atual ainda NÃO foi concluída
+            const outrosNoGrupo = activeWorkout.rotina.exercicios.filter(ex => ex.grupo === configExercicio.grupo && ex.exercicio_id !== exercicio_id);
+            for (const outroConfig of outrosNoGrupo) {
+              const outroRealizado = newExercicios.find(ex => ex.exercicio_id === outroConfig.exercicio_id);
+              if (outroRealizado && outroRealizado.series[serieIndex] && !outroRealizado.series[serieIndex].concluida) {
+                shouldStartTimer = false;
+                break;
+              }
+            }
+          }
+
+          if (shouldStartTimer) {
+            get().startTimer(tempoDescanso);
+          }
         }
       },
 

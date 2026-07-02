@@ -40,8 +40,13 @@ const WorkoutSession: React.FC = () => {
         tickTimer();
       }, 1000);
     } else if (isTimerActive && restTimer === 0) {
-      if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
-      playBeep();
+      db.configuracoes.toArray().then(confs => {
+        const som = confs.find(c => c.chave === 'som')?.valor !== false;
+        const vibracao = confs.find(c => c.chave === 'vibracao')?.valor !== false;
+        
+        if (vibracao && 'vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+        if (som) playBeep();
+      });
       stopTimer();
     }
     return () => clearInterval(interval);
@@ -160,53 +165,56 @@ const WorkoutSession: React.FC = () => {
                 key={exRealizado.exercicio_id} 
                 className={`transition-all duration-300 ${isFinished ? 'opacity-60 grayscale-[0.5]' : ''}`}
               >
+                {/* Indicador de Biset/Grupo */}
+                {configEx?.grupo && (
+                  <div className="flex items-center gap-2 mb-2 px-2 text-primary font-black uppercase tracking-widest text-[10px]">
+                    <span className="w-4 h-4 rounded bg-primary/20 flex items-center justify-center">{configEx.grupo}</span>
+                    <span>Biset {configEx.grupo}</span>
+                  </div>
+                )}
+
                 <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-xl shadow-black/5 border border-gray-100 dark:border-gray-700/50">
-                  <div className="flex items-start gap-4 mb-6">
+                  <div className="flex items-start gap-4 mb-4">
                     <div className="w-10 h-10 bg-primary text-white rounded-2xl flex items-center justify-center font-black text-lg shadow-lg shadow-primary/20 shrink-0">
                       {exIdx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="font-black text-lg leading-tight truncate dark:text-gray-100">{infoEx?.nome}</h3>
-                        <button 
-                          onClick={() => infoEx && setHelpExercise(infoEx)}
-                          className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                        >
-                          <Info size={18} />
-                        </button>
+                        <div className="flex gap-1 shrink-0">
+                          <button 
+                            onClick={() => {
+                              const note = prompt('Anotação para este exercício:', exRealizado.notas || '');
+                              if (note !== null) useWorkoutStore.getState().setExercicioNotas(exRealizado.exercicio_id, note);
+                            }}
+                            className={`p-1.5 rounded-lg transition-colors ${exRealizado.notas ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-primary/5'}`}
+                            title="Anotações do exercício"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                          </button>
+                          <button 
+                            onClick={() => infoEx && setHelpExercise(infoEx)}
+                            className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          >
+                            <Info size={18} />
+                          </button>
+                        </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <span className="text-[10px] bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-gray-500 dark:text-gray-400 font-bold uppercase tracking-tighter">
                           {infoEx?.categoria}
                         </span>
-                        {getUltimaPerformance(exRealizado.exercicio_id) && (
-                          <div className="flex items-center gap-1 text-[10px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">
-                            <TrendingUp size={10} />
-                            <span>ANTERIOR: {getUltimaPerformance(exRealizado.exercicio_id)}</span>
-                          </div>
-                        )}
                       </div>
+                      {exRealizado.notas && (
+                        <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                          <span className="font-bold block mb-1">Nota:</span>
+                          {exRealizado.notas}
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    {/* Substitutos Sugeridos */}
-                    {(infoEx?.substituicao1_id || infoEx?.substituicao2_id) && (
-                      <div className="flex flex-wrap gap-2 mb-4 px-1">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest w-full">Sugestões de troca:</span>
-                        {[infoEx.substituicao1_id, infoEx.substituicao2_id].map(subId => {
-                          if (!subId) return null;
-                          const subEx = todosExercicios.find(e => e.id === subId);
-                          return subEx ? (
-                            <div key={subId} className="text-[10px] font-bold text-gray-500 bg-gray-100 dark:bg-gray-700/50 px-2 py-1 rounded-lg border dark:border-gray-600 flex items-center gap-1">
-                              <RefreshCw size={10} className="text-primary" />
-                              {subEx.nome}
-                            </div>
-                          ) : null;
-                        })}
-                      </div>
-                    )}
-
                     {/* Meta da Rotina */}
                     {configEx && (
                       <div className="flex items-center gap-2 mb-3 px-1">
@@ -243,76 +251,97 @@ const WorkoutSession: React.FC = () => {
                       <span></span>
                     </div>
 
-                    {exRealizado.series.map((serie, sIdx) => (
-                      <div 
-                        key={sIdx} 
-                        className={`grid grid-cols-[30px_1fr_1fr_1fr_44px] gap-2 items-center p-1.5 rounded-2xl border-2 transition-all ${
-                          serie.concluida 
-                            ? 'bg-primary/5 border-primary/20' 
-                            : 'bg-gray-50 dark:bg-gray-900/40 border-transparent'
-                        }`}
-                      >
-                        <div className={`flex flex-col items-center justify-center rounded-lg h-full ${serie.tipo === 'aquecimento' ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-600' : 'bg-primary/10 text-primary'}`}>
-                          <span className="text-[7px] font-black uppercase tracking-tighter">{serie.tipo === 'aquecimento' ? 'AQ' : 'TR'}</span>
-                          <span className="text-[10px] font-black leading-none">
-                            {serie.tipo === 'trabalho'
-                              ? `${exRealizado.series.filter((s, i) => s.tipo === 'trabalho' && i <= sIdx).length}/${configEx?.series_trabalho ?? '?'}`
-                              : `${exRealizado.series.filter((s, i) => s.tipo === 'aquecimento' && i <= sIdx).length}/${configEx?.series_aquecimento ?? '?'}`
-                            }
-                          </span>
-                        </div>
-                        
-                        <div className="relative">
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            className="w-full h-10 bg-white dark:bg-gray-800 rounded-xl font-black text-center outline-none border border-gray-100 dark:border-gray-700 focus:border-primary transition-colors text-sm"
-                            value={serie.carga || ''}
-                            onChange={(e) => toggleSerie(exRealizado.exercicio_id, sIdx, { carga: parseFloat(e.target.value) || 0 })}
-                          />
-                          <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">kg</span>
-                        </div>
+                    {exRealizado.series.map((serie, sIdx) => {
+                      const ghostData = (() => {
+                        for (const sessao of sessoesPassadas) {
+                          const ex = sessao.exercicios_realizados.find(e => e.exercicio_id === exRealizado.exercicio_id);
+                          if (ex && ex.series[sIdx] && ex.series[sIdx].concluida) {
+                            const s = ex.series[sIdx];
+                            return `${s.carga}kg × ${s.repeticoes || s.tempo}`;
+                          }
+                        }
+                        return null;
+                      })();
 
-                        <div className="relative">
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            className="w-full h-10 bg-white dark:bg-gray-800 rounded-xl font-black text-center outline-none border border-gray-100 dark:border-gray-700 focus:border-primary transition-colors text-sm"
-                            value={infoEx?.tipo === 'carga' ? (serie.repeticoes || '') : (serie.tempo || '')}
-                            placeholder={
-                              infoEx?.tipo === 'carga'
-                                ? (configEx?.metas.repeticoes || '0')
-                                : String(configEx?.metas.tempo || '0')
-                            }
-                            onChange={(e) => toggleSerie(exRealizado.exercicio_id, sIdx, infoEx?.tipo === 'carga' ? { repeticoes: parseInt(e.target.value) || 0 } : { tempo: parseInt(e.target.value) || 0 })}
-                          />
-                          <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">{infoEx?.tipo === 'carga' ? 'rep' : 'seg'}</span>
-                        </div>
+                      return (
+                        <div key={sIdx} className="flex flex-col gap-1">
+                          <div 
+                            className={`grid grid-cols-[30px_1fr_1fr_1fr_44px] gap-2 items-center p-1.5 rounded-2xl border-2 transition-all ${
+                              serie.concluida 
+                                ? 'bg-primary/5 border-primary/20' 
+                                : 'bg-gray-50 dark:bg-gray-900/40 border-transparent'
+                            }`}
+                          >
+                            <div className={`flex flex-col items-center justify-center rounded-lg h-full ${serie.tipo === 'aquecimento' ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-600' : 'bg-primary/10 text-primary'}`}>
+                              <span className="text-[7px] font-black uppercase tracking-tighter">{serie.tipo === 'aquecimento' ? 'AQ' : 'TR'}</span>
+                              <span className="text-[10px] font-black leading-none">
+                                {serie.tipo === 'trabalho'
+                                  ? `${exRealizado.series.filter((s, i) => s.tipo === 'trabalho' && i <= sIdx).length}/${configEx?.series_trabalho ?? '?'}`
+                                  : `${exRealizado.series.filter((s, i) => s.tipo === 'aquecimento' && i <= sIdx).length}/${configEx?.series_aquecimento ?? '?'}`
+                                }
+                              </span>
+                            </div>
+                            
+                            <div className="relative">
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                className="w-full h-10 bg-white dark:bg-gray-800 rounded-xl font-black text-center outline-none border border-gray-100 dark:border-gray-700 focus:border-primary transition-colors text-sm"
+                                value={serie.carga || ''}
+                                onChange={(e) => toggleSerie(exRealizado.exercicio_id, sIdx, { carga: parseFloat(e.target.value) || 0 })}
+                              />
+                              <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">kg</span>
+                            </div>
 
-                        <div className="relative">
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            className="w-full h-10 bg-white dark:bg-gray-800 rounded-xl font-black text-center outline-none border border-gray-100 dark:border-gray-700 focus:border-primary transition-colors text-sm text-primary"
-                            placeholder="-"
-                            value={serie.rpe || ''}
-                            onChange={(e) => toggleSerie(exRealizado.exercicio_id, sIdx, { rpe: parseInt(e.target.value) || 0 })}
-                          />
-                          <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">rpe</span>
-                        </div>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                className="w-full h-10 bg-white dark:bg-gray-800 rounded-xl font-black text-center outline-none border border-gray-100 dark:border-gray-700 focus:border-primary transition-colors text-sm"
+                                value={infoEx?.tipo === 'carga' ? (serie.repeticoes || '') : (serie.tempo || '')}
+                                placeholder={
+                                  infoEx?.tipo === 'carga'
+                                    ? (configEx?.metas.repeticoes || '0')
+                                    : String(configEx?.metas.tempo || '0')
+                                }
+                                onChange={(e) => toggleSerie(exRealizado.exercicio_id, sIdx, infoEx?.tipo === 'carga' ? { repeticoes: parseInt(e.target.value) || 0 } : { tempo: parseInt(e.target.value) || 0 })}
+                              />
+                              <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">{infoEx?.tipo === 'carga' ? 'rep' : 'seg'}</span>
+                            </div>
 
-                        <button
-                          onClick={() => toggleSerie(exRealizado.exercicio_id, sIdx, { concluida: !serie.concluida })}
-                          className={`flex items-center justify-center h-10 w-10 rounded-xl transition-all ${
-                            serie.concluida 
-                              ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                              : 'bg-white dark:bg-gray-800 text-gray-300 border border-gray-100 dark:border-gray-700'
-                          }`}
-                        >
-                          {serie.concluida ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-                        </button>
-                      </div>
-                    ))}
+                            <div className="relative">
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                className="w-full h-10 bg-white dark:bg-gray-800 rounded-xl font-black text-center outline-none border border-gray-100 dark:border-gray-700 focus:border-primary transition-colors text-sm text-primary"
+                                placeholder="-"
+                                value={serie.rpe || ''}
+                                onChange={(e) => toggleSerie(exRealizado.exercicio_id, sIdx, { rpe: parseInt(e.target.value) || 0 })}
+                              />
+                              <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">rpe</span>
+                            </div>
+
+                            <button
+                              onClick={() => toggleSerie(exRealizado.exercicio_id, sIdx, { concluida: !serie.concluida })}
+                              className={`flex items-center justify-center h-10 w-10 rounded-xl transition-all ${
+                                serie.concluida 
+                                  ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                                  : 'bg-white dark:bg-gray-800 text-gray-300 border border-gray-100 dark:border-gray-700'
+                              }`}
+                            >
+                              {serie.concluida ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                            </button>
+                          </div>
+                          {ghostData && !serie.concluida && (
+                            <div className="flex justify-center -mt-1">
+                              <span className="text-[10px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-b-lg border-b border-l border-r border-gray-200 dark:border-gray-600">
+                                ÚLTIMO: {ghostData}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -331,11 +360,23 @@ const WorkoutSession: React.FC = () => {
           >
             <XCircle size={26} />
           </button>
+          
+          <button
+            onClick={() => {
+              const note = prompt('Anotação geral para este treino:', activeWorkout.notas || '');
+              if (note !== null) useWorkoutStore.getState().setSessaoNotas(note);
+            }}
+            className={`h-14 w-14 border-2 rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 ${activeWorkout.notas ? 'bg-primary/10 text-primary border-primary/20' : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'}`}
+            title="Anotações do treino"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+          </button>
+
           <button
             onClick={handleFinish}
             className="flex-1 h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-[0_10px_25px_-5px_rgba(0,200,150,0.4)] flex items-center justify-center gap-3 active:scale-[0.97] transition-all border-b-4 border-[#00a87d]"
           >
-            FINALIZAR TREINO
+            FINALIZAR
             <ChevronRight size={24} />
           </button>
         </div>

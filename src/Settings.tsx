@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { db } from './db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { exportDB, importDB } from 'dexie-export-import';
-import { Download, Upload, Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info, Smartphone, Calendar, Bell } from 'lucide-react';
+import { Download, Upload, Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info, Smartphone, Calendar, Bell, Volume2, Vibrate } from 'lucide-react';
 import { useWorkoutStore } from './store';
 import { useConfirm } from './ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -20,6 +20,24 @@ const Settings: React.FC = () => {
 
   const rotinas = useLiveQuery(() => db.rotinas.toArray()) || [];
   const planoSemanal = useLiveQuery(() => db.plano_semanal.toArray()) || [];
+  const configuracoes = useLiveQuery(() => db.configuracoes.toArray()) || [];
+
+  const somEnabled = configuracoes.find(c => c.chave === 'som')?.valor !== false;
+  const vibracaoEnabled = configuracoes.find(c => c.chave === 'vibracao')?.valor !== false;
+
+  const toggleConfig = async (chave: string, currentValue: boolean) => {
+    try {
+      const conf = configuracoes.find(c => c.chave === chave);
+      if (conf) {
+        await db.configuracoes.update(conf.id!, { valor: !currentValue });
+      } else {
+        await db.configuracoes.add({ chave, valor: !currentValue });
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao salvar configuração');
+    }
+  };
 
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
     'Notification' in window ? Notification.permission : 'denied'
@@ -94,7 +112,6 @@ const Settings: React.FC = () => {
 
     try {
       setIsImporting(true);
-      // Clear existing data (optional, importDB can handle it but sometimes it's better to be explicit)
       await db.delete();
       await db.open();
       await importDB(file);
@@ -152,6 +169,48 @@ const Settings: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Experiência de Treino */}
+      <section className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-4">
+          <Volume2 className="text-primary" size={20} />
+          <h2 className="font-bold text-lg">Experiência de Treino</h2>
+        </div>
+        
+        <div className="space-y-2">
+          <button
+            onClick={() => toggleConfig('som', somEnabled)}
+            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-primary/5 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Volume2 size={20} className={somEnabled ? 'text-primary' : 'text-gray-400'} />
+              <div className="text-left">
+                <div className="font-bold text-sm">Sons do Aplicativo</div>
+                <div className="text-[10px] text-gray-500 uppercase">Tocar bipe no fim do descanso</div>
+              </div>
+            </div>
+            <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${somEnabled ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}>
+              <div className={`w-4 h-4 bg-white rounded-full transition-transform ${somEnabled ? 'translate-x-4' : 'translate-x-0'}`}></div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => toggleConfig('vibracao', vibracaoEnabled)}
+            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-primary/5 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Vibrate size={20} className={vibracaoEnabled ? 'text-primary' : 'text-gray-400'} />
+              <div className="text-left">
+                <div className="font-bold text-sm">Vibração e Efeitos</div>
+                <div className="text-[10px] text-gray-500 uppercase">Vibrar no descanso e novo Recorde</div>
+              </div>
+            </div>
+            <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${vibracaoEnabled ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}>
+              <div className={`w-4 h-4 bg-white rounded-full transition-transform ${vibracaoEnabled ? 'translate-x-4' : 'translate-x-0'}`}></div>
+            </div>
+          </button>
         </div>
       </section>
 

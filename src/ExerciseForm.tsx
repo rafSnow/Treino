@@ -3,6 +3,8 @@ import { db, type Exercicio } from './db';
 import { X, Save, RefreshCw, Search } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import toast from 'react-hot-toast';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { format } from 'date-fns';
 
 interface ExerciseFormProps {
   exerciseToEdit?: Exercicio;
@@ -23,12 +25,29 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
   const [videoUrl, setVideoUrl] = useState(() => exerciseToEdit?.video_url ?? '');
   const [sub1, setSub1] = useState<number | undefined>(() => exerciseToEdit?.substituicao1_id);
   const [sub2, setSub2] = useState<number | undefined>(() => exerciseToEdit?.substituicao2_id);
+  const [imagem, setImagem] = useState(() => exerciseToEdit?.imagem ?? '');
 
   const [searchSub1, setSearchSub1] = useState('');
   const [searchSub2, setSearchSub2] = useState('');
   const [focusedSub, setFocusedSub] = useState<1 | 2 | null>(null);
 
   const todosExercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
+  
+  const prHistory = useLiveQuery(
+    () => exerciseToEdit?.id ? db.personal_records.where('exercicio_id').equals(exerciseToEdit.id).sortBy('data') : Promise.resolve([]),
+    [exerciseToEdit?.id]
+  ) || [];
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagem(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +60,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
         notas_padrao: exerciseToEdit?.notas_padrao ?? '',
         ajuda,
         video_url: videoUrl,
+        imagem,
         substituicao1_id: sub1,
         substituicao2_id: sub2
       };
@@ -214,8 +234,26 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
           </div>
 
           <div className="space-y-4 pt-4 border-t dark:border-gray-700">
-            <h3 className="text-xs font-black text-primary uppercase tracking-widest">Ajuda e Vídeo (Público no Compartilhamento)</h3>
+            <h3 className="text-xs font-black text-primary uppercase tracking-widest">Mídia e Instruções</h3>
             
+            <div>
+              <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Imagem / GIF do Exercício</label>
+              {imagem && (
+                <div className="relative w-32 h-32 mb-3">
+                  <img src={imagem} alt="Preview" className="w-full h-full object-cover rounded-xl border-2 border-primary/20" />
+                  <button type="button" onClick={() => setImagem('')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform">
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer"
+              />
+            </div>
+
             <div>
               <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Instruções de Execução</label>
               <textarea
@@ -237,6 +275,43 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
               />
             </div>
           </div>
+
+          {exerciseToEdit && prHistory.length > 0 && (
+            <div className="space-y-4 pt-4 border-t dark:border-gray-700">
+              <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center justify-between">
+                <span>Evolução de Carga (PRs)</span>
+                <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">{prHistory.length} registros</span>
+              </h3>
+              <div className="h-48 w-full bg-white dark:bg-gray-900 rounded-xl p-2 border-2 border-gray-100 dark:border-gray-700">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={prHistory} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis 
+                      dataKey="data" 
+                      tickFormatter={(date) => format(new Date(date), 'dd/MM')} 
+                      stroke="#888888" 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false} 
+                      minTickGap={20}
+                    />
+                    <YAxis 
+                      stroke="#888888" 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false} 
+                      tickFormatter={(value) => `${value}`}
+                    />
+                    <Tooltip 
+                      labelFormatter={(label) => format(new Date(label), 'dd/MM/yyyy')}
+                      formatter={(value: number, name: string, props: any) => [`${value}kg (${props.payload.repeticoes} reps)`, 'PR']}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', background: '#1a1a1a', color: '#fff' }}
+                    />
+                    <Line type="monotone" dataKey="carga" stroke="#00C896" strokeWidth={3} dot={{ r: 4, fill: '#00C896', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"

@@ -11,6 +11,7 @@ export interface Exercicio {
   substituicao2_id?: number;
   ajuda?: string;
   video_url?: string;
+  imagem?: string; // Imagem em Base64
 }
 
 export interface ExercicioNoTreino {
@@ -18,6 +19,7 @@ export interface ExercicioNoTreino {
   series_aquecimento: number;
   series_trabalho: number;
   tempo_descanso?: number;
+  grupo?: string; // Para identificar superséries (ex: 'A', 'B')
   metas: {
     repeticoes?: string;
     carga?: string;
@@ -47,8 +49,10 @@ export interface SessaoTreino {
   rotina_id?: number;
   data_inicio: Date;
   data_fim?: Date;
+  notas?: string;
   exercicios_realizados: {
     exercicio_id: number;
+    notas?: string;
     series: Serie[];
   }[];
 }
@@ -71,6 +75,7 @@ export interface Biometria {
   perna_d?: number;
   perna_e?: number;
   notas?: string;
+  fotos?: string[];
 }
 
 export interface PersonalRecord {
@@ -86,6 +91,17 @@ export interface PlanoSemanal {
   rotina_id: number;
 }
 
+export interface SessaoCardio {
+  id?: number;
+  tipo: 'Corrida' | 'Caminhada' | 'Ciclismo' | 'Escada';
+  data: Date;
+  duracao_minutos: number;
+  distancia_km?: number;
+  calorias?: number;
+  bpm_medio?: number;
+  notas?: string;
+}
+
 export class AppDatabase extends Dexie {
   exercicios!: Table<Exercicio>;
   rotinas!: Table<Rotina>;
@@ -94,6 +110,7 @@ export class AppDatabase extends Dexie {
   biometria!: Table<Biometria>;
   personal_records!: Table<PersonalRecord>;
   plano_semanal!: Table<PlanoSemanal>;
+  cardio!: Table<SessaoCardio>;
 
   constructor() {
     super('TreinoDB');
@@ -156,6 +173,18 @@ export class AppDatabase extends Dexie {
       biometria: '++id, data',
       personal_records: '++id, exercicio_id, data',
       plano_semanal: 'dia_semana'
+    });
+
+    // v7: Adiciona Cardio
+    this.version(7).stores({
+      exercicios: '++id, nome, categoria, *tags',
+      rotinas: '++id, nome',
+      sessoes: '++id, rotina_id, data_inicio',
+      configuracoes: '++id, chave',
+      biometria: '++id, data',
+      personal_records: '++id, exercicio_id, data',
+      plano_semanal: 'dia_semana',
+      cardio: '++id, data, tipo'
     });
   }
 }

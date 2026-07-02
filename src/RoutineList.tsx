@@ -1,13 +1,33 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Rotina } from './db';
-import { Play, Plus, Trash2, Edit2, CalendarCheck, Share2 } from 'lucide-react';
+import { Play, Plus, Trash2, Edit2, CalendarCheck, Share2, Copy, Clock } from 'lucide-react';
 import RoutineForm from './RoutineForm';
 import { useWorkoutStore } from './store';
 import { useConfirm } from './ConfirmDialog';
 import toast from 'react-hot-toast';
 
-const RoutineList: React.FC = () => {
+export const calcularTempoEstimado = (rotina: Rotina) => {
+  let totalSegundos = 0;
+  rotina.exercicios.forEach(ex => {
+    const sets = ex.series_aquecimento + ex.series_trabalho;
+    // Assumir 45s de duração média por série se não for por tempo
+    const duracaoSet = ex.metas.tempo || 45; 
+    const descanso = ex.tempo_descanso || 60;
+    
+    totalSegundos += sets * duracaoSet;
+    // O descanso ocorre apenas entre as séries, e não após a última série do exercício.
+    // Para simplificar e prever transições, podemos somar o descanso para cada série ou sets - 1
+    totalSegundos += sets > 0 ? sets * descanso : 0; 
+  });
+  return Math.ceil(totalSegundos / 60); // em minutos
+};
+
+interface RoutineListProps {
+  onOpenCatalog: () => void;
+}
+
+const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRoutine, setEditingRoutine] = useState<Rotina | undefined>();
   const startWorkout = useWorkoutStore(state => state.startWorkout);
@@ -21,7 +41,6 @@ const RoutineList: React.FC = () => {
 
   const handleShare = async (routine: Rotina) => {
     try {
-      // Busca todos os exercícios da rotina para incluir no payload
       const exerciseIds = routine.exercicios.map(e => e.exercicio_id);
       const exercises = await db.exercicios.where('id').anyOf(exerciseIds).toArray();
       
@@ -31,7 +50,6 @@ const RoutineList: React.FC = () => {
           const info = exercises.find(e => e.id === re.exercicio_id);
           return {
             ...re,
-            // Dados do exercício para recriar se necessário
             ex: {
               n: info?.nome,
               c: info?.categoria,
@@ -63,6 +81,20 @@ const RoutineList: React.FC = () => {
     }
   };
 
+  const handleClone = async (routine: Rotina) => {
+    try {
+      const clone = {
+        nome: `${routine.nome} (Cópia)`,
+        exercicios: [...routine.exercicios]
+      };
+      await db.rotinas.add(clone);
+      toast.success('Rotina clonada com sucesso!');
+    } catch (error) {
+      console.error('Falha ao clonar rotina:', error);
+      toast.error('Erro ao clonar rotina.');
+    }
+  };
+
   const handleDelete = async (id: number, nome: string) => {
     if (await confirm({
       title: 'Excluir Rotina',
@@ -74,7 +106,7 @@ const RoutineList: React.FC = () => {
         await db.rotinas.delete(id);
       } catch (error) {
         console.error('Falha ao excluir rotina:', error);
-        alert('Erro ao excluir rotina.');
+        toast.error('Erro ao excluir rotina.');
       }
     }
   };
@@ -94,12 +126,20 @@ const RoutineList: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Treinar</h1>
-        <button 
-          onClick={handleAddNew}
-          className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
-        >
-          <Plus size={24} />
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={onOpenCatalog}
+            className="bg-white dark:bg-gray-800 text-gray-500 border border-gray-200 dark:border-gray-700 p-2 rounded-xl shadow-sm hover:scale-105 transition-transform flex items-center gap-1 text-xs font-bold uppercase"
+          >
+            Catálogo
+          </button>
+          <button 
+            onClick={handleAddNew}
+            className="bg-primary text-white p-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
+          >
+            <Plus size={24} />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -117,6 +157,9 @@ const RoutineList: React.FC = () => {
         ) : (
           rotinas?.map(routine => {
             const isSuggested = routine.id === suggestionId;
+            const tempoEstimado = calcularTempoEstimado(routine);
+            const totalSeries = routine.exercicios.reduce((acc, ex) => acc + ex.series_trabalho + ex.series_aquecimento, 0);
+
             return (
               <div 
                 key={routine.id}
@@ -136,27 +179,26 @@ const RoutineList: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">
-                      {routine.exercicios.length} exercícios
-                    </p>
+                    <div className="flex gap-3 text-sm text-gray-500 font-medium">
+                      <span>{routine.exercicios.length} exercícios</span>
+                      <span>&bull;</span>
+                      <span>{totalSeries} séries</span>
+                      <span>&bull;</span>
+                      <span className="flex items-center gap-1"><Clock size={14} /> ~{tempoEstimado} min</span>
+                    </div>
                   </div>
                   <div className="flex gap-1">
                     <button 
-                      onClick={() => handleShare(routine)}
-                      className="p-2 text-gray-400 hover:text-primary transition-colors"
-                      title="Compartilhar"
-                    >
-                      <Share2 size={18} />
-                    </button>
-                    <button 
                       onClick={() => handleEdit(routine)}
-                      className="p-2 text-gray-400 hover:text-primary transition-colors"
+                      className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                      title="Editar Rotina"
                     >
                       <Edit2 size={18} />
                     </button>
                     <button 
                       onClick={() => routine.id && handleDelete(routine.id, routine.nome)}
-                      className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                      className="p-2 text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded-xl transition-colors"
+                      title="Excluir Rotina"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -165,7 +207,21 @@ const RoutineList: React.FC = () => {
 
                 <div className="flex gap-2">
                   <button 
-                    className="flex-1 bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all"
+                    onClick={() => handleShare(routine)}
+                    className="p-3 text-gray-500 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center"
+                    title="Compartilhar"
+                  >
+                    <Share2 size={20} />
+                  </button>
+                  <button 
+                    onClick={() => handleClone(routine)}
+                    className="p-3 text-gray-500 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center"
+                    title="Clonar Rotina"
+                  >
+                    <Copy size={20} />
+                  </button>
+                  <button 
+                    className="flex-1 bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all shadow-sm"
                     onClick={() => startWorkout(routine)}
                   >
                     <Play size={18} fill="currentColor" />
@@ -189,3 +245,4 @@ const RoutineList: React.FC = () => {
 };
 
 export default RoutineList;
+

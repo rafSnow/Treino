@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Exercicio } from './db';
-import { Search, Plus, Edit2, Trash2, Filter } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Filter, ArrowLeft } from 'lucide-react';
 import ExerciseForm from './ExerciseForm';
 import { useConfirm } from './ConfirmDialog';
 
-const ExerciseList: React.FC = () => {
+interface ExerciseListProps {
+  onBack: () => void;
+}
+
+const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<Exercicio | undefined>();
   const confirm = useConfirm();
@@ -23,15 +28,19 @@ const ExerciseList: React.FC = () => {
         );
       }
 
-      const results = await collection.toArray();
+      let results = await collection.toArray();
       
       if (selectedTag) {
-        return results.filter(ex => ex.tags.includes(selectedTag));
+        results = results.filter(ex => ex.tags.includes(selectedTag));
+      }
+
+      if (selectedCategory) {
+        results = results.filter(ex => ex.categoria === selectedCategory);
       }
       
       return results;
     },
-    [searchTerm, selectedTag]
+    [searchTerm, selectedTag, selectedCategory]
   );
 
   const handleDelete = async (id: number, nome: string) => {
@@ -80,13 +89,22 @@ const ExerciseList: React.FC = () => {
   };
 
   const tagsDisponiveis = Array.from(new Set(exercicios?.flatMap(ex => ex.tags) || []));
+  const categoriasDisponiveis = Array.from(new Set(exercicios?.map(ex => ex.categoria) || []));
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
       {/* Header Elegante */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Catálogo</h1>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={onBack}
+              className="p-2 text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:scale-105 transition-transform"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="text-2xl font-bold">Catálogo</h1>
+          </div>
           <button 
             onClick={handleAddNew}
             className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
@@ -106,6 +124,30 @@ const ExerciseList: React.FC = () => {
           />
         </div>
 
+        {categoriasDisponiveis.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-2">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                selectedCategory === null ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
+              }`}
+            >
+              TODAS CATEGORIAS
+            </button>
+            {categoriasDisponiveis.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat === selectedCategory ? null : cat)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                  selectedCategory === cat ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
+                }`}
+              >
+                {cat.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        )}
+
         {tagsDisponiveis.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
@@ -114,7 +156,7 @@ const ExerciseList: React.FC = () => {
                 selectedTag === null ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
               }`}
             >
-              TODOS
+              TODAS TAGS
             </button>
             {tagsDisponiveis.map(tag => (
               <button
@@ -141,11 +183,14 @@ const ExerciseList: React.FC = () => {
           exercicios?.map(ex => (
             <div 
               key={ex.id}
-              className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between group"
+              className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between group gap-3"
             >
-              <div className="flex-1">
+              {ex.imagem && (
+                <img src={ex.imagem} alt={ex.nome} className="w-12 h-12 rounded-lg object-cover bg-gray-100 dark:bg-gray-900" />
+              )}
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-lg">{ex.nome}</h3>
+                  <h3 className="font-bold text-lg truncate">{ex.nome}</h3>
                   <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-500">
                     {ex.categoria}
                   </span>
