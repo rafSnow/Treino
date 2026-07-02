@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useWorkoutStore } from './store';
 import { db, type Exercicio } from './db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { CheckCircle2, Circle, Clock, ChevronRight, XCircle, TrendingUp, RefreshCw, Info } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, ChevronRight, XCircle, TrendingUp, Info } from 'lucide-react';
 import { useConfirm } from './ConfirmDialog';
 import ExerciseHelpModal from './ExerciseHelpModal';
 
@@ -54,16 +54,7 @@ const WorkoutSession: React.FC = () => {
 
   if (!activeWorkout) return null;
 
-  const getUltimaPerformance = (exercicioId: number) => {
-    for (const sessao of sessoesPassadas) {
-      const ex = sessao.exercicios_realizados.find(e => e.exercicio_id === exercicioId);
-      if (ex && ex.series.some(s => s.concluida)) {
-        const serieValida = ex.series.find(s => s.concluida);
-        return serieValida ? `${serieValida.carga}kg x ${serieValida.repeticoes || serieValida.tempo}` : null;
-      }
-    }
-    return null;
-  };
+  // getUltimaPerformance removed to fix TS6133
 
   const handleFinish = async () => {
     if (await confirm({

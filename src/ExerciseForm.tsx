@@ -303,7 +303,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
                     />
                     <Tooltip 
                       labelFormatter={(label) => format(new Date(label), 'dd/MM/yyyy')}
-                      formatter={(value: number, name: string, props: any) => [`${value}kg (${props.payload.repeticoes} reps)`, 'PR']}
+                      formatter={(value: number, _name: string, props: any) => [`${value}kg (${props.payload.repeticoes} reps)`, 'PR']}
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', background: '#1a1a1a', color: '#fff' }}
                     />
                     <Line type="monotone" dataKey="carga" stroke="#00C896" strokeWidth={3} dot={{ r: 4, fill: '#00C896', strokeWidth: 0 }} activeDot={{ r: 6 }} />

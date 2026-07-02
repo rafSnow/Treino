@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import ExerciseList from './ExerciseList'
-import { Dumbbell, History as HistoryIcon, Settings as SettingsIcon, Play, Scale, HeartPulse } from 'lucide-react'
+import { History as HistoryIcon, Settings as SettingsIcon, Play, Scale, HeartPulse } from 'lucide-react'
 
 import RoutineList from './RoutineList'
 import WorkoutSession from './WorkoutSession'

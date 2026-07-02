@@ -228,7 +228,7 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routineToEdit, onClose }) => 
       };
 
       if (routineToEdit?.id) {
-        await db.rotinas.update(routineToEdit.id, data);
+        await db.rotinas.update(routineToEdit.id, data as any);
         toast.success('Rotina atualizada!');
       } else {
         await db.rotinas.add(data);
