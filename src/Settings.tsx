@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { db } from './db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { exportDB, importDB } from 'dexie-export-import';
-import { Download, Upload, Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info, Smartphone, Calendar, Bell, Volume2, Vibrate } from 'lucide-react';
+import { Download, Upload, Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info, Smartphone, Calendar, Bell, Volume2, Vibrate, Moon, Sun, Monitor } from 'lucide-react';
 import { useWorkoutStore } from './store';
 import { useConfirm } from './ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -15,7 +15,7 @@ const Settings: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { installPrompt, installApp } = useWorkoutStore();
+  const { installPrompt, installApp, theme, setTheme } = useWorkoutStore();
   const confirm = useConfirm();
 
   const rotinas = useLiveQuery(() => db.rotinas.toArray()) || [];
@@ -169,6 +169,39 @@ const Settings: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Tema do Aplicativo */}
+      <section className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-4">
+          <Moon className="text-primary" size={20} />
+          <h2 className="font-bold text-lg">Tema do Aplicativo</h2>
+        </div>
+        <p className="text-xs text-gray-700 dark:text-gray-300 mb-4">Selecione o tema visual do aplicativo.</p>
+        
+        <div className="flex gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-xl">
+          <button aria-label="Tema Sistema"
+            onClick={() => setTheme('system')}
+            className={`flex-1 flex flex-col items-center py-2 rounded-lg transition-all ${theme === 'system' ? 'bg-white dark:bg-gray-600 shadow-sm text-primary' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+          >
+            <Monitor size={18} className="mb-1" />
+            <span className="text-xs font-bold uppercase">Sistema</span>
+          </button>
+          <button aria-label="Tema Claro"
+            onClick={() => setTheme('light')}
+            className={`flex-1 flex flex-col items-center py-2 rounded-lg transition-all ${theme === 'light' ? 'bg-white dark:bg-gray-600 shadow-sm text-primary' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+          >
+            <Sun size={18} className="mb-1" />
+            <span className="text-xs font-bold uppercase">Claro</span>
+          </button>
+          <button aria-label="Tema Escuro"
+            onClick={() => setTheme('dark')}
+            className={`flex-1 flex flex-col items-center py-2 rounded-lg transition-all ${theme === 'dark' ? 'bg-white dark:bg-gray-600 shadow-sm text-primary' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+          >
+            <Moon size={18} className="mb-1" />
+            <span className="text-xs font-bold uppercase">Escuro</span>
+          </button>
         </div>
       </section>
 

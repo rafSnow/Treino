@@ -29,6 +29,8 @@ interface WorkoutStore {
   restTimer: number; // em segundos
   isTimerActive: boolean;
   installPrompt: BeforeInstallPromptEvent | null;
+  theme: 'system' | 'light' | 'dark';
+  setTheme: (theme: 'system' | 'light' | 'dark') => void;
   
   startWorkout: (rotina: Rotina) => void;
   finishWorkout: () => Promise<void>;
@@ -55,6 +57,9 @@ export const useWorkoutStore = create<WorkoutStore>()(
       restTimer: 0,
       isTimerActive: false,
       installPrompt: null,
+      theme: 'system',
+
+      setTheme: (theme: 'system' | 'light' | 'dark') => set({ theme }),
 
       setInstallPrompt: (prompt: BeforeInstallPromptEvent | null) => set({ installPrompt: prompt }),
       

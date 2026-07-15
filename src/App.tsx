@@ -24,6 +24,29 @@ function App() {
   const [activeTab, setActiveTab] = useState<Tab>('workout')
   const activeWorkout = useWorkoutStore(state => state.activeWorkout)
   const setInstallPrompt = useWorkoutStore(state => state.setInstallPrompt)
+  const theme = useWorkoutStore(state => state.theme)
+
+  // Aplica o tema
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.classList.add(systemTheme);
+      
+      const listener = (e: MediaQueryListEvent) => {
+        root.classList.remove('light', 'dark');
+        root.classList.add(e.matches ? 'dark' : 'light');
+      };
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
+    } else {
+      root.classList.add(theme);
+    }
+  }, [theme]);
+
 
   // 5.2 Sem Estado de Loading no Startup
   const isLoaded = useLiveQuery(async () => {
