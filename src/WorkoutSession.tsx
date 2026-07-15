@@ -432,6 +432,31 @@ const WorkoutSession: React.FC = () => {
                           </div>
                         );
                       })}
+
+                      {/* IA - Sugestão de Sobrecarga */}
+                      {(() => {
+                        if (!configEx || infoEx?.tipo !== 'carga') return null;
+                        const hasLowRpeSuccess = exRealizado.series.some(s => 
+                          s.concluida && 
+                          s.tipo === 'trabalho' && 
+                          s.rpe !== undefined && s.rpe > 0 && s.rpe <= 7 && 
+                          s.repeticoes !== undefined && s.repeticoes >= Number(configEx.metas.repeticoes || 0)
+                        );
+                        
+                        if (hasLowRpeSuccess) {
+                          return (
+                            <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-xl flex items-start gap-3">
+                              <div className="bg-primary/20 p-2 rounded-full text-primary shrink-0 mt-0.5">
+                                <TrendingUp size={16} />
+                              </div>
+                              <p className="text-xs font-medium text-primary">
+                                <strong>Sobrecarga sugerida:</strong> Você atingiu a meta com esforço moderado. Considere aumentar 1-2kg na próxima sessão!
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 </div>
