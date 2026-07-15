@@ -399,7 +399,11 @@ const WorkoutSession: React.FC = () => {
                                 <input
                                   type="number"
                                   inputMode="numeric"
-                                  className="w-full h-10 bg-white dark:bg-gray-800 rounded-xl font-black text-center outline-none border border-gray-100 dark:border-gray-700 focus:border-primary transition-colors text-sm text-primary"
+                                  className={`w-full h-10 bg-white dark:bg-gray-800 rounded-xl font-black text-center outline-none border border-gray-100 dark:border-gray-700 focus:border-primary transition-colors text-sm ${
+                                    !serie.rpe || serie.rpe < 6 ? 'text-gray-400 focus:text-primary' :
+                                    serie.rpe < 8 ? 'text-primary' :
+                                    serie.rpe < 10 ? 'text-orange-500' : 'text-red-500'
+                                  }`}
                                   placeholder="-"
                                   value={serie.rpe || ''}
                                   onChange={(e) => toggleSerie(exRealizado.exercicio_id, sIdx, { rpe: parseInt(e.target.value) || 0 })}
