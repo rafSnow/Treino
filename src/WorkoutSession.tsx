@@ -104,9 +104,9 @@ const WorkoutSession: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sessão em andamento</p>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 font-bold uppercase tracking-widest">Sessão em andamento</p>
                 </div>
-                <div className="flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-lg text-primary font-black text-[10px] border border-primary/20">
+                <div className="flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-lg text-primary font-black text-xs border border-primary/20">
                   <TrendingUp size={10} />
                   <span>{totalVolume.toLocaleString()} kg VOLUME</span>
                 </div>
@@ -119,12 +119,12 @@ const WorkoutSession: React.FC = () => {
                   <span className="text-[8px] font-black uppercase leading-none opacity-80">Descanso</span>
                   <span className="font-mono text-xl font-black leading-none">{restTimer}s</span>
                 </div>
-                <button onClick={stopTimer} className="bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors">
+                <button aria-label="Botão de Ação" onClick={stopTimer} className="bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors">
                   <XCircle size={18} />
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-gray-400">
+              <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                 <Clock size={14} />
                 <span className="text-xs font-bold font-mono">--:--</span>
               </div>
@@ -158,7 +158,7 @@ const WorkoutSession: React.FC = () => {
               >
                 {/* Indicador de Biset/Grupo */}
                 {configEx?.grupo && (
-                  <div className="flex items-center gap-2 mb-2 px-2 text-primary font-black uppercase tracking-widest text-[10px]">
+                  <div className="flex items-center gap-2 mb-2 px-2 text-primary font-black uppercase tracking-widest text-xs">
                     <span className="w-4 h-4 rounded bg-primary/20 flex items-center justify-center">{configEx.grupo}</span>
                     <span>Biset {configEx.grupo}</span>
                   </div>
@@ -173,17 +173,17 @@ const WorkoutSession: React.FC = () => {
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="font-black text-lg leading-tight truncate dark:text-gray-100">{infoEx?.nome}</h3>
                         <div className="flex gap-1 shrink-0">
-                          <button 
+                          <button aria-label="Botão" 
                             onClick={() => {
                               const note = prompt('Anotação para este exercício:', exRealizado.notas || '');
                               if (note !== null) useWorkoutStore.getState().setExercicioNotas(exRealizado.exercicio_id, note);
                             }}
-                            className={`p-1.5 rounded-lg transition-colors ${exRealizado.notas ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-primary/5'}`}
+                            className={`p-1.5 rounded-lg transition-colors ${exRealizado.notas ? 'text-primary bg-primary/10' : 'text-gray-600 dark:text-gray-400 hover:text-primary hover:bg-primary/5'}`}
                             title="Anotações do exercício"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
                           </button>
-                          <button 
+                          <button aria-label="Botão" 
                             onClick={() => infoEx && setHelpExercise(infoEx)}
                             className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
                           >
@@ -192,12 +192,12 @@ const WorkoutSession: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <span className="text-[10px] bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-gray-500 dark:text-gray-400 font-bold uppercase tracking-tighter">
+                        <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-gray-500 dark:text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tighter">
                           {infoEx?.categoria}
                         </span>
                       </div>
                       {exRealizado.notas && (
-                        <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                        <div className="mt-2 text-xs text-gray-600 dark:text-gray-600 dark:text-gray-400 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
                           <span className="font-bold block mb-1">Nota:</span>
                           {exRealizado.notas}
                         </div>
@@ -209,7 +209,7 @@ const WorkoutSession: React.FC = () => {
                     {/* Meta da Rotina */}
                     {configEx && (
                       <div className="flex items-center gap-2 mb-3 px-1">
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                        <span className="text-[11px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-widest">
                           Meta:
                         </span>
                         <span className="bg-primary/10 text-primary text-[11px] font-black px-3 py-1 
@@ -234,7 +234,7 @@ const WorkoutSession: React.FC = () => {
                     )}
 
                     {/* Header das colunas */}
-                    <div className="grid grid-cols-[30px_1fr_1fr_1fr_44px] gap-2 px-2 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">
+                    <div className="grid grid-cols-[30px_1fr_1fr_1fr_44px] gap-2 px-2 text-[11px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-widest text-center">
                       <span>TIPO</span>
                       <span>Carga</span>
                       <span>{infoEx?.tipo === 'carga' ? 'Reps' : 'Tempo'}</span>
@@ -265,7 +265,7 @@ const WorkoutSession: React.FC = () => {
                           >
                             <div className={`flex flex-col items-center justify-center rounded-lg h-full ${serie.tipo === 'aquecimento' ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-600' : 'bg-primary/10 text-primary'}`}>
                               <span className="text-[7px] font-black uppercase tracking-tighter">{serie.tipo === 'aquecimento' ? 'AQ' : 'TR'}</span>
-                              <span className="text-[10px] font-black leading-none">
+                              <span className="text-xs font-black leading-none">
                                 {serie.tipo === 'trabalho'
                                   ? `${exRealizado.series.filter((s, i) => s.tipo === 'trabalho' && i <= sIdx).length}/${configEx?.series_trabalho ?? '?'}`
                                   : `${exRealizado.series.filter((s, i) => s.tipo === 'aquecimento' && i <= sIdx).length}/${configEx?.series_aquecimento ?? '?'}`
@@ -312,7 +312,7 @@ const WorkoutSession: React.FC = () => {
                               <span className="absolute bottom-1 right-1 text-[7px] font-black text-gray-300 uppercase">rpe</span>
                             </div>
 
-                            <button
+                            <button aria-label="Botão" 
                               onClick={() => toggleSerie(exRealizado.exercicio_id, sIdx, { concluida: !serie.concluida })}
                               className={`flex items-center justify-center h-10 w-10 rounded-xl transition-all ${
                                 serie.concluida 
@@ -325,7 +325,7 @@ const WorkoutSession: React.FC = () => {
                           </div>
                           {ghostData && !serie.concluida && (
                             <div className="flex justify-center -mt-1">
-                              <span className="text-[10px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-b-lg border-b border-l border-r border-gray-200 dark:border-gray-600">
+                              <span className="text-xs font-bold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-b-lg border-b border-l border-r border-gray-200 dark:border-gray-600">
                                 ÚLTIMO: {ghostData}
                               </span>
                             </div>
@@ -352,18 +352,18 @@ const WorkoutSession: React.FC = () => {
             <XCircle size={26} />
           </button>
           
-          <button
+          <button aria-label="Botão" 
             onClick={() => {
               const note = prompt('Anotação geral para este treino:', activeWorkout.notas || '');
               if (note !== null) useWorkoutStore.getState().setSessaoNotas(note);
             }}
-            className={`h-14 w-14 border-2 rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 ${activeWorkout.notas ? 'bg-primary/10 text-primary border-primary/20' : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'}`}
+            className={`h-14 w-14 border-2 rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 ${activeWorkout.notas ? 'bg-primary/10 text-primary border-primary/20' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'}`}
             title="Anotações do treino"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
           </button>
 
-          <button
+          <button aria-label="Botão de Ação" 
             onClick={handleFinish}
             className="flex-1 h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-[0_10px_25px_-5px_rgba(0,200,150,0.4)] flex items-center justify-center gap-3 active:scale-[0.97] transition-all border-b-4 border-[#00a87d]"
           >

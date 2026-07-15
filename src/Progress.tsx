@@ -38,7 +38,7 @@ const Progress: React.FC = () => {
     <div className="space-y-6 pb-10">
       <div className="flex gap-2">
         <div className="flex-1 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <label className="block text-sm font-bold mb-3 text-gray-500 uppercase tracking-wider">
+          <label className="block text-sm font-bold mb-3 text-gray-700 dark:text-gray-300 uppercase tracking-wider">
             Selecionar Exercício
           </label>
           <select
@@ -52,7 +52,7 @@ const Progress: React.FC = () => {
             ))}
           </select>
         </div>
-        <button 
+        <button aria-label="Botão" 
           onClick={() => setIsCalculatorOpen(true)}
           className="bg-white dark:bg-gray-800 px-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-center text-primary hover:bg-primary/5 transition-colors"
           title="Calculadora 1RM"
@@ -67,7 +67,7 @@ const Progress: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="mb-6">
             <h3 className="font-bold text-xl">{currentEx?.nome}</h3>
-            <p className="text-sm text-gray-500">Progressão de Carga Máxima (kg)</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300">Progressão de Carga Máxima (kg)</p>
           </div>
 
           {chartData.length > 1 ? (
@@ -103,7 +103,7 @@ const Progress: React.FC = () => {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="py-12 text-center text-gray-400">
+            <div className="py-12 text-center text-gray-600 dark:text-gray-400">
               <Activity size={48} className="mx-auto mb-4 opacity-20" />
               <p>Dados insuficientes para gerar o gráfico.</p>
               <p className="text-xs">Realize este exercício em pelo menos 2 treinos diferentes.</p>
@@ -111,7 +111,7 @@ const Progress: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="py-20 text-center text-gray-400 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+        <div className="py-20 text-center text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
           <p>Selecione um exercício acima para visualizar sua evolução.</p>
         </div>
       )}

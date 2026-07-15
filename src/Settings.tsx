@@ -148,7 +148,7 @@ const Settings: React.FC = () => {
           <Calendar className="text-primary" size={20} />
           <h2 className="font-bold text-lg">Planejamento Semanal</h2>
         </div>
-        <p className="text-xs text-gray-500 mb-4">Escolha qual treino você pretende fazer em cada dia da semana.</p>
+        <p className="text-xs text-gray-700 dark:text-gray-300 mb-4">Escolha qual treino você pretende fazer em cada dia da semana.</p>
         
         <div className="space-y-3">
           {DAYS_OF_WEEK.map((day, index) => {
@@ -180,15 +180,14 @@ const Settings: React.FC = () => {
         </div>
         
         <div className="space-y-2">
-          <button
-            onClick={() => toggleConfig('som', somEnabled)}
+          <button aria-label="Botão"             onClick={() => toggleConfig('som', somEnabled)}
             className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-primary/5 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <Volume2 size={20} className={somEnabled ? 'text-primary' : 'text-gray-400'} />
+              <Volume2 size={20} className={somEnabled ? 'text-primary' : 'text-gray-600 dark:text-gray-400'} />
               <div className="text-left">
                 <div className="font-bold text-sm">Sons do Aplicativo</div>
-                <div className="text-[10px] text-gray-500 uppercase">Tocar bipe no fim do descanso</div>
+                <div className="text-xs text-gray-700 dark:text-gray-300 uppercase">Tocar bipe no fim do descanso</div>
               </div>
             </div>
             <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${somEnabled ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}>
@@ -196,15 +195,14 @@ const Settings: React.FC = () => {
             </div>
           </button>
 
-          <button
-            onClick={() => toggleConfig('vibracao', vibracaoEnabled)}
+          <button aria-label="Botão"             onClick={() => toggleConfig('vibracao', vibracaoEnabled)}
             className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-primary/5 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <Vibrate size={20} className={vibracaoEnabled ? 'text-primary' : 'text-gray-400'} />
+              <Vibrate size={20} className={vibracaoEnabled ? 'text-primary' : 'text-gray-600 dark:text-gray-400'} />
               <div className="text-left">
                 <div className="font-bold text-sm">Vibração e Efeitos</div>
-                <div className="text-[10px] text-gray-500 uppercase">Vibrar no descanso e novo Recorde</div>
+                <div className="text-xs text-gray-700 dark:text-gray-300 uppercase">Vibrar no descanso e novo Recorde</div>
               </div>
             </div>
             <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${vibracaoEnabled ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}>
@@ -220,16 +218,15 @@ const Settings: React.FC = () => {
           <Bell className="text-primary" size={20} />
           <h2 className="font-bold text-lg">Notificações</h2>
         </div>
-        <p className="text-xs text-gray-500 mb-6">
+        <p className="text-xs text-gray-700 dark:text-gray-300 mb-6">
           Ative as notificações para ser avisado quando o tempo de descanso terminar, mesmo com o app em segundo plano.
         </p>
         
-        <button
-          onClick={requestNotificationPermission}
+        <button aria-label="Botão de Ação"           onClick={requestNotificationPermission}
           disabled={notifPermission === 'granted'}
           className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${
             notifPermission === 'granted' 
-              ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-default' 
+              ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-default' 
               : 'bg-primary/10 text-primary hover:bg-primary/20'
           }`}
         >
@@ -250,51 +247,48 @@ const Settings: React.FC = () => {
           <h2 className="font-bold text-lg">Segurança e Dados</h2>
         </div>
         
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-gray-700 dark:text-gray-300 mb-6">
           Seus dados são armazenados apenas neste dispositivo. Recomendamos exportar um backup regularmente.
         </p>
 
         <div className="space-y-3">
           {installPrompt && (
-            <button
-              onClick={installApp}
+            <button aria-label="Botão de Ação"               onClick={installApp}
               className="w-full flex items-center justify-between p-4 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20 group"
             >
               <div className="flex items-center gap-3">
                 <Smartphone size={20} />
                 <div className="text-left">
                   <div className="font-bold text-sm">Instalar Aplicativo</div>
-                  <div className="text-[10px] text-white/70 uppercase">Acesso rápido na tela inicial</div>
+                  <div className="text-xs text-white/70 uppercase">Acesso rápido na tela inicial</div>
                 </div>
               </div>
             </button>
           )}
 
-          <button
-            onClick={handleExport}
+          <button aria-label="Botão de Ação"             onClick={handleExport}
             disabled={isExporting}
             className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-primary/5 transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <Download size={20} className="text-gray-400 group-hover:text-primary" />
+              <Download size={20} className="text-gray-600 dark:text-gray-400 group-hover:text-primary" />
               <div className="text-left">
                 <div className="font-bold text-sm">Exportar Backup</div>
-                <div className="text-[10px] text-gray-400 uppercase">Salvar arquivo .json</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 uppercase">Salvar arquivo .json</div>
               </div>
             </div>
             {isExporting && <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
           </button>
 
-          <button
-            onClick={handleImportClick}
+          <button aria-label="Botão de Ação"             onClick={handleImportClick}
             disabled={isImporting}
             className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-primary/5 transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <Upload size={20} className="text-gray-400 group-hover:text-primary" />
+              <Upload size={20} className="text-gray-600 dark:text-gray-400 group-hover:text-primary" />
               <div className="text-left">
                 <div className="font-bold text-sm">Importar Backup</div>
-                <div className="text-[10px] text-gray-400 uppercase">Restaurar de um arquivo</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 uppercase">Restaurar de um arquivo</div>
               </div>
             </div>
             <input
@@ -315,8 +309,7 @@ const Settings: React.FC = () => {
           <h2 className="font-bold text-lg">Zona de Perigo</h2>
         </div>
 
-        <button
-          onClick={handleClearData}
+        <button aria-label="Botão de Ação"           onClick={handleClearData}
           className="w-full flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/10 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-100 transition-colors"
         >
           <Trash2 size={20} />
@@ -326,13 +319,13 @@ const Settings: React.FC = () => {
 
       {/* About */}
       <section className="text-center pt-8 space-y-4">
-        <div className="flex justify-center gap-4 text-gray-400">
+        <div className="flex justify-center gap-4 text-gray-600 dark:text-gray-400">
           <a href="#" className="hover:text-primary transition-colors"><ExternalLink size={20} /></a>
           <a href="#" className="hover:text-primary transition-colors"><Info size={20} /></a>
         </div>
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Treino PWA v1.0.0</p>
-          <p className="text-[10px] text-gray-500 mt-1">Desenvolvido para alta performance offline.</p>
+          <p className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest">Treino PWA v1.0.0</p>
+          <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">Desenvolvido para alta performance offline.</p>
         </div>
       </section>
     </div>

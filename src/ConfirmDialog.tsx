@@ -51,17 +51,17 @@ export const ConfirmProvider: React.FC<{ children: ReactNode }> = ({ children })
                   {options.title || 'Confirmar'}
                 </h3>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <p className="text-gray-600 dark:text-gray-600 dark:text-gray-400 mb-6">
                 {options.message}
               </p>
               <div className="flex gap-3">
-                <button
+                <button aria-label="Fechar" 
                   onClick={handleCancel}
                   className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   {options.cancelLabel || 'Cancelar'}
                 </button>
-                <button
+                <button aria-label="Botão de Ação" 
                   onClick={handleConfirm}
                   className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all active:scale-95 ${
                     options.variant === 'danger' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-primary hover:bg-primary/90 shadow-primary/20'

@@ -32,19 +32,17 @@ const History: React.FC = () => {
     <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
       {/* Header Tabs */}
       <div className="flex gap-2">
-        <button
-          onClick={() => setView('list')}
+        <button aria-label="Botão"           onClick={() => setView('list')}
           className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-            view === 'list' ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-100 dark:border-gray-700'
+            view === 'list' ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700'
           }`}
         >
           <HistoryIcon size={18} />
           Histórico
         </button>
-        <button
-          onClick={() => setView('stats')}
+        <button aria-label="Botão"           onClick={() => setView('stats')}
           className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-            view === 'stats' ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-100 dark:border-gray-700'
+            view === 'stats' ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700'
           }`}
         >
           <TrendingUp size={18} />
@@ -92,7 +90,7 @@ const History: React.FC = () => {
 
             {/* Barra de Busca */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400" size={18} />
               <input
                 type="text"
                 placeholder="Filtrar por nome do treino..."
@@ -109,14 +107,14 @@ const History: React.FC = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h4 className="font-bold text-primary text-lg">{getRoutineName(sessao.rotina_id)}</h4>
-                      <p className="text-xs text-gray-500 font-medium">
+                      <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
                         {format(new Date(sessao.data_inicio), "PPP 'às' p", { locale: ptBR })}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button 
+                      <button aria-label="Botão" 
                         onClick={() => setShareSessao(sessao)}
-                        className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors border border-gray-100 dark:border-gray-700"
+                        className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors border border-gray-100 dark:border-gray-700"
                         title="Compartilhar Resumo"
                       >
                         <Share2 size={16} />
@@ -125,7 +123,7 @@ const History: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-wrap gap-2 mb-3">
-                    <span className="text-[10px] font-bold bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full uppercase">
+                    <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full uppercase">
                       {sessao.exercicios_realizados.length} Exercícios
                     </span>
                     {(() => {
@@ -134,13 +132,13 @@ const History: React.FC = () => {
                         0
                       );
                       return vol > 0 ? (
-                        <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary/20 uppercase">
+                        <span className="text-xs font-black text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary/20 uppercase">
                           {vol.toLocaleString()}kg Volume
                         </span>
                       ) : null;
                     })()}
                     {sessao.data_fim && (
-                      <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full border border-blue-500/20 uppercase">
+                      <span className="text-xs font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full border border-blue-500/20 uppercase">
                         {Math.max(1, Math.round((new Date(sessao.data_fim).getTime() - new Date(sessao.data_inicio).getTime()) / 60000))} Min
                       </span>
                     )}
@@ -152,19 +150,19 @@ const History: React.FC = () => {
                       const seriesConcluidas = ex.series.filter(s => s.concluida).length;
                       return (
                         <div key={ex.exercicio_id} className="text-xs flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400 truncate pr-2">{nomeEx}</span>
+                          <span className="text-gray-600 dark:text-gray-600 dark:text-gray-400 truncate pr-2">{nomeEx}</span>
                           <span className="font-medium shrink-0">{seriesConcluidas} séries</span>
                         </div>
                       );
                     })}
                     {sessao.exercicios_realizados.length > 3 && (
-                      <p className="text-[10px] text-gray-400 text-center mt-2 font-bold">+ {sessao.exercicios_realizados.length - 3} outros</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 text-center mt-2 font-bold">+ {sessao.exercicios_realizados.length - 3} outros</p>
                     )}
                   </div>
                 </div>
               ))}
               {filteredSessoes?.length === 0 && (
-                <p className="text-center text-gray-500 py-12 italic">Nenhum treino encontrado.</p>
+                <p className="text-center text-gray-700 dark:text-gray-300 py-12 italic">Nenhum treino encontrado.</p>
               )}
             </div>
           </div>

@@ -85,14 +85,14 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
       <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-6 pb-10 sm:pb-6 shadow-xl animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">{exerciseToEdit ? 'Editar Exercício' : 'Novo Exercício'}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+          <button aria-label="Fechar" onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
             <X size={24} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-400">NOME</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-400">NOME</label>
             <input
               required
               type="text"
@@ -105,7 +105,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Categoria</label>
+              <label className="block text-xs font-bold mb-1 text-gray-600 dark:text-gray-400 uppercase tracking-widest">Categoria</label>
               <select
                 value={categoria}
                 onChange={e => setCategoria(e.target.value)}
@@ -115,7 +115,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Registro</label>
+              <label className="block text-xs font-bold mb-1 text-gray-600 dark:text-gray-400 uppercase tracking-widest">Registro</label>
               <select
                 value={tipo}
                 onChange={e => setTipo(e.target.value as 'carga' | 'tempo')}
@@ -127,13 +127,13 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
           </div>
 
           <div>
-            <label className="text-[10px] font-bold mb-2 text-gray-400 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-xs font-bold mb-2 text-gray-600 dark:text-gray-400 uppercase tracking-widest flex items-center gap-2">
               <RefreshCw size={12} className="text-primary" /> Substituições Sugeridas
             </label>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative">
                 <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={14} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 group-focus-within:text-primary transition-colors" size={14} />
                   <input
                     type="text"
                     value={searchSub1}
@@ -153,7 +153,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
                         ex.nome.toLowerCase().includes(searchSub1.toLowerCase())
                       )
                       .map(ex => (
-                        <button
+                        <button aria-label="Botão" 
                           key={ex.id}
                           type="button"
                           onClick={() => {
@@ -171,9 +171,9 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
                 )}
                 {sub1 && (
                   <div className="mt-2 flex">
-                    <div className="bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded-lg flex items-center gap-1 border border-primary/20">
+                    <div className="bg-primary/10 text-primary text-xs font-black px-2 py-1 rounded-lg flex items-center gap-1 border border-primary/20">
                       <span className="truncate max-w-[100px]">{todosExercicios.find(ex => ex.id === sub1)?.nome}</span>
-                      <button type="button" onClick={() => { setSub1(undefined); setSearchSub1(''); }} className="hover:text-red-500 transition-colors">
+                      <button aria-label="Botão" type="button" onClick={() => { setSub1(undefined); setSearchSub1(''); }} className="hover:text-red-500 transition-colors">
                         <X size={14} />
                       </button>
                     </div>
@@ -183,7 +183,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
 
               <div className="relative">
                 <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={14} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 group-focus-within:text-primary transition-colors" size={14} />
                   <input
                     type="text"
                     value={searchSub2}
@@ -203,7 +203,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
                         ex.nome.toLowerCase().includes(searchSub2.toLowerCase())
                       )
                       .map(ex => (
-                        <button
+                        <button aria-label="Botão" 
                           key={ex.id}
                           type="button"
                           onClick={() => {
@@ -221,9 +221,9 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
                 )}
                 {sub2 && (
                   <div className="mt-2 flex">
-                    <div className="bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded-lg flex items-center gap-1 border border-primary/20">
+                    <div className="bg-primary/10 text-primary text-xs font-black px-2 py-1 rounded-lg flex items-center gap-1 border border-primary/20">
                       <span className="truncate max-w-[100px]">{todosExercicios.find(ex => ex.id === sub2)?.nome}</span>
-                      <button type="button" onClick={() => { setSub2(undefined); setSearchSub2(''); }} className="hover:text-red-500 transition-colors">
+                      <button aria-label="Botão" type="button" onClick={() => { setSub2(undefined); setSearchSub2(''); }} className="hover:text-red-500 transition-colors">
                         <X size={14} />
                       </button>
                     </div>
@@ -237,11 +237,11 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
             <h3 className="text-xs font-black text-primary uppercase tracking-widest">Mídia e Instruções</h3>
             
             <div>
-              <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Imagem / GIF do Exercício</label>
+              <label className="block text-xs font-bold mb-1 text-gray-600 dark:text-gray-400 uppercase tracking-widest">Imagem / GIF do Exercício</label>
               {imagem && (
                 <div className="relative w-32 h-32 mb-3">
                   <img src={imagem} alt="Preview" className="w-full h-full object-cover rounded-xl border-2 border-primary/20" />
-                  <button type="button" onClick={() => setImagem('')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform">
+                  <button aria-label="Botão" type="button" onClick={() => setImagem('')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform">
                     <X size={14} />
                   </button>
                 </div>
@@ -250,12 +250,12 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer"
+                className="w-full text-sm text-gray-700 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">Instruções de Execução</label>
+              <label className="block text-xs font-bold mb-1 text-gray-600 dark:text-gray-400 uppercase tracking-widest">Instruções de Execução</label>
               <textarea
                 value={ajuda}
                 onChange={e => setAjuda(e.target.value)}
@@ -265,7 +265,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold mb-1 text-gray-400 uppercase tracking-widest">URL do Vídeo (YouTube)</label>
+              <label className="block text-xs font-bold mb-1 text-gray-600 dark:text-gray-400 uppercase tracking-widest">URL do Vídeo (YouTube)</label>
               <input
                 type="url"
                 value={videoUrl}
@@ -280,7 +280,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
             <div className="space-y-4 pt-4 border-t dark:border-gray-700">
               <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center justify-between">
                 <span>Evolução de Carga (PRs)</span>
-                <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">{prHistory.length} registros</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">{prHistory.length} registros</span>
               </h3>
               <div className="h-48 w-full bg-white dark:bg-gray-900 rounded-xl p-2 border-2 border-gray-100 dark:border-gray-700">
                 <ResponsiveContainer width="100%" height="100%">
@@ -313,7 +313,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
             </div>
           )}
 
-          <button
+          <button aria-label="Botão" 
             type="submit"
             className="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all mt-6"
           >

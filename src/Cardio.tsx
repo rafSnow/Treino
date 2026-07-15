@@ -115,7 +115,7 @@ const Cardio: React.FC = () => {
     <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Cardio</h1>
-        <button 
+        <button aria-label="Botão" 
           onClick={() => setIsFormOpen(true)}
           className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
         >
@@ -126,19 +126,19 @@ const Cardio: React.FC = () => {
       {/* Resumo do Mês */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
-          <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 flex items-center gap-1">
+          <p className="text-xs uppercase font-bold text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-1">
             <Footprints size={12} /> Distância (Mês)
           </p>
           <p className="text-2xl font-black leading-none text-primary">
-            {totalDistanceThisMonth.toFixed(1)} <span className="text-[10px] uppercase text-gray-500">km</span>
+            {totalDistanceThisMonth.toFixed(1)} <span className="text-xs uppercase text-gray-700 dark:text-gray-300">km</span>
           </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
-          <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 flex items-center gap-1">
+          <p className="text-xs uppercase font-bold text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-1">
             <Timer size={12} /> Tempo (Mês)
           </p>
           <p className="text-2xl font-black leading-none text-blue-500">
-            {totalTimeThisMonth} <span className="text-[10px] uppercase text-gray-500">min</span>
+            {totalTimeThisMonth} <span className="text-xs uppercase text-gray-700 dark:text-gray-300">min</span>
           </p>
         </div>
       </div>
@@ -172,7 +172,7 @@ const Cardio: React.FC = () => {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="py-10 text-center text-gray-400 italic text-sm">
+          <div className="py-10 text-center text-gray-600 dark:text-gray-400 italic text-sm">
             Adicione pelo menos dois treinos com distância para ver a evolução.
           </div>
         )}
@@ -189,11 +189,11 @@ const Cardio: React.FC = () => {
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start mb-1">
                 <h4 className="font-black text-lg truncate">{m.tipo}</h4>
-                <button onClick={() => m.id && handleDelete(m.id)} className="p-1 text-gray-300 hover:text-red-500 transition-colors">
+                <button aria-label="Botão" onClick={() => m.id && handleDelete(m.id)} className="p-1 text-gray-300 hover:text-red-500 transition-colors">
                   <Trash2 size={16} />
                 </button>
               </div>
-              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-2">
+              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-bold tracking-wider mb-2">
                 {format(new Date(m.data), 'PPP', { locale: ptBR })}
               </p>
               
@@ -224,7 +224,7 @@ const Cardio: React.FC = () => {
               </div>
               
               {m.notas && (
-                <div className="mt-2 text-xs text-gray-500 italic border-l-2 border-gray-200 dark:border-gray-700 pl-2">
+                <div className="mt-2 text-xs text-gray-700 dark:text-gray-300 italic border-l-2 border-gray-200 dark:border-gray-700 pl-2">
                   {m.notas}
                 </div>
               )}
@@ -232,7 +232,7 @@ const Cardio: React.FC = () => {
           </div>
         ))}
         {sessoes.length === 0 && (
-          <div className="text-center py-10 text-gray-400 text-sm">
+          <div className="text-center py-10 text-gray-600 dark:text-gray-400 text-sm">
             Nenhum cardio registrado ainda.
           </div>
         )}
@@ -244,13 +244,13 @@ const Cardio: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 pb-10 sm:pb-6 shadow-xl animate-in slide-in-from-bottom duration-300 my-auto border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Registrar Cardio</h2>
-              <button onClick={() => setIsFormOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white"><X size={24}/></button>
+              <button aria-label="Botão" onClick={() => setIsFormOpen(false)} className="text-gray-600 dark:text-gray-400 hover:text-gray-600 dark:hover:text-white"><X size={24}/></button>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tipo *</label>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Tipo *</label>
                   <select
                     value={tipo}
                     onChange={e => setTipo(e.target.value as TipoCardio)}
@@ -260,7 +260,7 @@ const Cardio: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Data *</label>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Data *</label>
                   <input
                     required
                     type="date"
@@ -273,7 +273,7 @@ const Cardio: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Duração (min) *</label>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Duração (min) *</label>
                   <input
                     required
                     type="number"
@@ -287,9 +287,9 @@ const Cardio: React.FC = () => {
                   <Timer className="absolute right-4 top-[38px] text-gray-300" size={20} />
                 </div>
                 <div className="relative">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex justify-between">
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1 flex justify-between">
                     Distância (km)
-                    <span className="text-[9px] text-primary bg-primary/10 px-1 rounded">Pace: {pacePreview}</span>
+                    <span className="text-[11px] text-primary bg-primary/10 px-1 rounded">Pace: {pacePreview}</span>
                   </label>
                   <input
                     type="number"
@@ -306,7 +306,7 @@ const Cardio: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Calorias (kcal)</label>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Calorias (kcal)</label>
                   <input
                     type="number"
                     step="1"
@@ -318,7 +318,7 @@ const Cardio: React.FC = () => {
                   <Flame className="absolute right-4 top-[36px] text-gray-300" size={16} />
                 </div>
                 <div className="relative">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">BPM Médio</label>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">BPM Médio</label>
                   <input
                     type="number"
                     step="1"
@@ -332,7 +332,7 @@ const Cardio: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Notas (Opcional)</label>
+                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Notas (Opcional)</label>
                 <textarea
                   value={notas}
                   onChange={e => setNotas(e.target.value)}
@@ -342,8 +342,7 @@ const Cardio: React.FC = () => {
                 />
               </div>
 
-              <button
-                type="submit"
+              <button aria-label="Botão"                 type="submit"
                 className="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all mt-6"
               >
                 <Save size={20} />

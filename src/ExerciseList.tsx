@@ -97,15 +97,15 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
       <div>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <button 
+            <button aria-label="Voltar" 
               onClick={onBack}
-              className="p-2 text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:scale-105 transition-transform"
+              className="p-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:scale-105 transition-transform"
             >
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-2xl font-bold">Catálogo</h1>
           </div>
-          <button 
+          <button aria-label="Adicionar" 
             onClick={handleAddNew}
             className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
           >
@@ -114,7 +114,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
         </div>
 
         <div className="relative group mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
           <input
             type="text"
             placeholder="Buscar exercício..."
@@ -126,20 +126,20 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
 
         {categoriasDisponiveis.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-2">
-            <button
+            <button aria-label="Botão" 
               onClick={() => setSelectedCategory(null)}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                selectedCategory === null ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
+                selectedCategory === null ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700'
               }`}
             >
               TODAS CATEGORIAS
             </button>
             {categoriasDisponiveis.map(cat => (
-              <button
+              <button aria-label="Botão" 
                 key={cat}
                 onClick={() => setSelectedCategory(cat === selectedCategory ? null : cat)}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                  selectedCategory === cat ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
+                  selectedCategory === cat ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700'
                 }`}
               >
                 {cat.toUpperCase()}
@@ -150,20 +150,20 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
 
         {tagsDisponiveis.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            <button
+            <button aria-label="Botão" 
               onClick={() => setSelectedTag(null)}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                selectedTag === null ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
+                selectedTag === null ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700'
               }`}
             >
               TODAS TAGS
             </button>
             {tagsDisponiveis.map(tag => (
-              <button
+              <button aria-label="Botão" 
                 key={tag}
                 onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                  selectedTag === tag ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
+                  selectedTag === tag ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700'
                 }`}
               >
                 {tag.toUpperCase()}
@@ -175,7 +175,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
 
       <div className="space-y-3">
         {exercicios?.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-700 dark:text-gray-300">
             <Filter size={48} className="mx-auto mb-4 opacity-20" />
             <p>Nenhum exercício encontrado.</p>
           </div>
@@ -191,28 +191,28 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-bold text-lg truncate">{ex.nome}</h3>
-                  <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-500">
+                  <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">
                     {ex.categoria}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {ex.tags.map(tag => (
-                    <span key={tag} className="text-[10px] uppercase tracking-wider font-semibold text-primary">
+                    <span key={tag} className="text-xs uppercase tracking-wider font-semibold text-primary">
                       #{tag}
                     </span>
                   ))}
                 </div>
               </div>
               <div className="flex gap-1">
-                <button 
+                <button aria-label="Botão" 
                   onClick={() => handleEdit(ex)}
-                  className="p-2 text-gray-400 hover:text-primary transition-colors"
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors"
                 >
                   <Edit2 size={18} />
                 </button>
-                <button 
+                <button aria-label="Botão" 
                   onClick={() => ex.id && handleDelete(ex.id, ex.nome)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors"
                 >
                   <Trash2 size={18} />
                 </button>

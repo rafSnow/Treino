@@ -135,7 +135,7 @@ const Biometrics: React.FC = () => {
     <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Corpo</h1>
-        <button 
+        <button aria-label="Botão" 
           onClick={() => setIsFormOpen(true)}
           className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
         >
@@ -146,7 +146,7 @@ const Biometrics: React.FC = () => {
       {/* Resumo atual */}
       {ultimaMedicao && (
         <div className="grid grid-cols-2 gap-4">
-          <button 
+          <button aria-label="Botão" 
             onClick={() => setSelectedMetric('peso')}
             className={`p-4 rounded-2xl shadow-sm border transition-all text-left flex items-center gap-3 ${selectedMetric === 'peso' ? 'bg-primary/5 border-primary' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}
           >
@@ -154,11 +154,11 @@ const Biometrics: React.FC = () => {
               <Scale size={24} />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold text-gray-400">Peso</p>
-              <p className="text-xl font-bold leading-tight">{ultimaMedicao.peso}<span className="text-[10px] ml-0.5">kg</span></p>
+              <p className="text-xs uppercase font-bold text-gray-600 dark:text-gray-400">Peso</p>
+              <p className="text-xl font-bold leading-tight">{ultimaMedicao.peso}<span className="text-xs ml-0.5">kg</span></p>
             </div>
           </button>
-          <button 
+          <button aria-label="Botão" 
             onClick={() => setSelectedMetric('percentual_gordura')}
             className={`p-4 rounded-2xl shadow-sm border transition-all text-left flex items-center gap-3 ${selectedMetric === 'percentual_gordura' ? 'bg-orange-500/5 border-orange-500' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}
           >
@@ -166,11 +166,11 @@ const Biometrics: React.FC = () => {
               <Droplets size={24} />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold text-gray-400">% Gordura</p>
-              <p className="text-xl font-bold leading-tight">{ultimaMedicao.percentual_gordura || '--'}<span className="text-[10px] ml-0.5">%</span></p>
+              <p className="text-xs uppercase font-bold text-gray-600 dark:text-gray-400">% Gordura</p>
+              <p className="text-xl font-bold leading-tight">{ultimaMedicao.percentual_gordura || '--'}<span className="text-xs ml-0.5">%</span></p>
             </div>
           </button>
-          <button 
+          <button aria-label="Botão" 
             onClick={() => setSelectedMetric('massa_muscular')}
             className={`p-4 rounded-2xl shadow-sm border transition-all text-left flex items-center gap-3 ${selectedMetric === 'massa_muscular' ? 'bg-red-500/5 border-red-500' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}
           >
@@ -178,8 +178,8 @@ const Biometrics: React.FC = () => {
               <Activity size={24} />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold text-gray-400">Massa Musc.</p>
-              <p className="text-xl font-bold leading-tight">{ultimaMedicao.massa_muscular || '--'}<span className="text-[10px] ml-0.5">kg</span></p>
+              <p className="text-xs uppercase font-bold text-gray-600 dark:text-gray-400">Massa Musc.</p>
+              <p className="text-xl font-bold leading-tight">{ultimaMedicao.massa_muscular || '--'}<span className="text-xs ml-0.5">kg</span></p>
             </div>
           </button>
           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-3">
@@ -187,8 +187,8 @@ const Biometrics: React.FC = () => {
               <Ruler size={24} />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold text-gray-400">Cintura</p>
-              <p className="text-xl font-bold leading-tight">{ultimaMedicao.cintura || '--'}<span className="text-[10px] ml-0.5">cm</span></p>
+              <p className="text-xs uppercase font-bold text-gray-600 dark:text-gray-400">Cintura</p>
+              <p className="text-xl font-bold leading-tight">{ultimaMedicao.cintura || '--'}<span className="text-xs ml-0.5">cm</span></p>
             </div>
           </div>
         </div>
@@ -220,7 +220,7 @@ const Biometrics: React.FC = () => {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="py-10 text-center text-gray-400 italic text-sm">
+          <div className="py-10 text-center text-gray-600 dark:text-gray-400 italic text-sm">
             Adicione pelo menos duas medições com {metricConfig[selectedMetric].label.toLowerCase()} para ver o gráfico.
           </div>
         )}
@@ -235,16 +235,16 @@ const Biometrics: React.FC = () => {
               <div className="flex-1">
                 <div className="flex items-baseline gap-2">
                   <p className="font-bold text-lg">{m.peso} kg</p>
-                  {m.percentual_gordura && <span className="text-[10px] text-orange-500 font-bold bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">{m.percentual_gordura}% BF</span>}
+                  {m.percentual_gordura && <span className="text-xs text-orange-500 font-bold bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">{m.percentual_gordura}% BF</span>}
                 </div>
-                <p className="text-xs text-gray-400 font-medium">{format(new Date(m.data), 'PPP', { locale: ptBR })}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">{format(new Date(m.data), 'PPP', { locale: ptBR })}</p>
               </div>
-              <button onClick={() => m.id && handleDelete(m.id)} className="p-2 text-gray-300 hover:text-red-500 transition-colors">
+              <button aria-label="Botão" onClick={() => m.id && handleDelete(m.id)} className="p-2 text-gray-300 hover:text-red-500 transition-colors">
                 <Trash2 size={18} />
               </button>
             </div>
             
-            <div className="flex flex-wrap gap-2 text-[10px] text-gray-500">
+            <div className="flex flex-wrap gap-2 text-xs text-gray-700 dark:text-gray-300">
               {m.massa_muscular && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Músculo: <strong className="text-gray-700 dark:text-gray-300">{m.massa_muscular}kg</strong></span>}
               {m.cintura && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Cintura: <strong className="text-gray-700 dark:text-gray-300">{m.cintura}cm</strong></span>}
               {(m.braco_d || m.braco_e) && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Braço: <strong className="text-gray-700 dark:text-gray-300">{m.braco_d}/{m.braco_e}cm</strong></span>}
@@ -270,7 +270,7 @@ const Biometrics: React.FC = () => {
       {/* Modal de Imagem Fullscreen */}
       {fullScreenImage && (
         <div className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4" onClick={() => setFullScreenImage(null)}>
-          <button className="absolute top-6 right-6 text-white p-2 bg-white/10 rounded-full"><X size={24}/></button>
+          <button aria-label="Botão" className="absolute top-6 right-6 text-white p-2 bg-white/10 rounded-full"><X size={24}/></button>
           <img src={fullScreenImage} className="max-w-full max-h-[90vh] object-contain rounded-lg" alt="Progresso Fullscreen" />
         </div>
       )}
@@ -281,11 +281,11 @@ const Biometrics: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 pb-10 sm:pb-6 shadow-xl animate-in slide-in-from-bottom duration-300 my-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Nova Medição</h2>
-              <button onClick={() => setIsFormOpen(false)}><X size={24}/></button>
+              <button aria-label="Botão" onClick={() => setIsFormOpen(false)}><X size={24}/></button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Peso (kg) *</label>
+                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Peso (kg) *</label>
                 <input
                   required
                   type="number"
@@ -299,7 +299,7 @@ const Biometrics: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">% Gordura</label>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">% Gordura</label>
                   <input
                     type="number"
                     step="0.1"
@@ -310,7 +310,7 @@ const Biometrics: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex justify-between">
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1 flex justify-between">
                     <span>Massa Musc. (kg)</span>
                     {(peso && gordura) && <span className="text-[8px] bg-primary/20 text-primary px-1 rounded">AUTO</span>}
                   </label>
@@ -326,7 +326,7 @@ const Biometrics: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Cintura (cm)</label>
+                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Cintura (cm)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -339,7 +339,7 @@ const Biometrics: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Braço Dir. (cm)</label>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Braço Dir. (cm)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -350,7 +350,7 @@ const Biometrics: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Braço Esq. (cm)</label>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Braço Esq. (cm)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -363,12 +363,12 @@ const Biometrics: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 mt-2">Fotos de Progresso</label>
+                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-2 mt-2">Fotos de Progresso</label>
                 <div className="flex flex-wrap gap-2">
                   {fotos.map((foto, idx) => (
                     <div key={idx} className="relative">
                       <img src={foto} alt={`Preview ${idx}`} className="w-16 h-16 object-cover rounded-xl border border-gray-200 dark:border-gray-700" />
-                      <button 
+                      <button aria-label="Botão" 
                         type="button" 
                         onClick={() => removePhoto(idx)}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-md"
@@ -378,7 +378,7 @@ const Biometrics: React.FC = () => {
                     </div>
                   ))}
                   
-                  <label className="w-16 h-16 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900">
+                  <label className="w-16 h-16 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900">
                     <Camera size={20} className="mb-1" />
                     <span className="text-[8px] font-bold uppercase tracking-wider">Adicionar</span>
                     <input 
@@ -392,8 +392,7 @@ const Biometrics: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                type="submit"
+              <button aria-label="Botão"                 type="submit"
                 className="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all mt-6"
               >
                 <Save size={20} />

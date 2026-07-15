@@ -26,7 +26,7 @@ const ExerciseHelpModal: React.FC<ExerciseHelpModalProps> = ({ exercise, onClose
             </div>
             <h2 className="text-xl font-black truncate">{exercise.nome}</h2>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+          <button aria-label="Fechar" onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
             <X size={24} />
           </button>
         </div>
@@ -54,7 +54,7 @@ const ExerciseHelpModal: React.FC<ExerciseHelpModalProps> = ({ exercise, onClose
           )}
 
           <div className="space-y-2">
-            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Instruções de Execução</h3>
+            <h3 className="text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-widest">Instruções de Execução</h3>
             <div className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-medium">
               {exercise.ajuda || "Nenhuma instrução cadastrada para este exercício."}
             </div>
@@ -62,7 +62,7 @@ const ExerciseHelpModal: React.FC<ExerciseHelpModalProps> = ({ exercise, onClose
         </div>
 
         <div className="p-6 pb-10 sm:pb-6 bg-gray-50 dark:bg-gray-900 border-t dark:border-gray-700">
-          <button
+          <button aria-label="Fechar" 
             onClick={onClose}
             className="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-opacity-90 transition-all"
           >

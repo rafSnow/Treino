@@ -91,7 +91,7 @@ const ShareWorkoutModal: React.FC<Props> = ({ sessao, rotina, exercicios, onClos
               <h2 className="font-black text-2xl tracking-tight leading-none mb-1">
                 {rotina?.nome || 'Treino Avulso'}
               </h2>
-              <p className="text-gray-400 font-bold text-xs flex items-center gap-1">
+              <p className="text-gray-600 dark:text-gray-400 font-bold text-xs flex items-center gap-1">
                 <Calendar size={12} />
                 {format(new Date(sessao.data_inicio), "dd 'de' MMMM", { locale: ptBR })}
               </p>
@@ -105,22 +105,22 @@ const ShareWorkoutModal: React.FC<Props> = ({ sessao, rotina, exercicios, onClos
             <div className="bg-white/10 backdrop-blur-sm p-3 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center">
               <Clock size={16} className="text-blue-400 mb-1" />
               <span className="font-black text-lg leading-none">{tempoTotalMin}</span>
-              <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Min</span>
+              <span className="text-[11px] uppercase font-bold text-gray-600 dark:text-gray-400 tracking-wider">Min</span>
             </div>
             <div className="bg-white/10 backdrop-blur-sm p-3 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center">
               <TrendingUp size={16} className="text-primary mb-1" />
               <span className="font-black text-lg leading-none">{(totalVolume / 1000).toFixed(1)}k</span>
-              <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Volume</span>
+              <span className="text-[11px] uppercase font-bold text-gray-600 dark:text-gray-400 tracking-wider">Volume</span>
             </div>
             <div className="bg-white/10 backdrop-blur-sm p-3 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center">
               <CheckCircle2 size={16} className="text-purple-400 mb-1" />
               <span className="font-black text-lg leading-none">{totalSeries}</span>
-              <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Séries</span>
+              <span className="text-[11px] uppercase font-bold text-gray-600 dark:text-gray-400 tracking-wider">Séries</span>
             </div>
           </div>
 
           <div className="space-y-2 mb-4">
-            <h3 className="text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Principais Movimentos</h3>
+            <h3 className="text-xs uppercase font-black tracking-widest text-gray-700 dark:text-gray-300 mb-2">Principais Movimentos</h3>
             {sessao.exercicios_realizados.slice(0, 4).map((ex) => {
               const nomeEx = exercicios.find(e => e.id === ex.exercicio_id)?.nome;
               const series = ex.series.filter(s => s.concluida).length;
@@ -132,27 +132,25 @@ const ShareWorkoutModal: React.FC<Props> = ({ sessao, rotina, exercicios, onClos
               );
             })}
             {sessao.exercicios_realizados.length > 4 && (
-              <p className="text-center text-[10px] text-gray-500 font-bold mt-2 pt-2">
+              <p className="text-center text-xs text-gray-700 dark:text-gray-300 font-bold mt-2 pt-2">
                 + {sessao.exercicios_realizados.length - 4} outros exercícios
               </p>
             )}
           </div>
           
           <div className="mt-4 pt-4 border-t border-white/10 flex justify-center items-center">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">Antigravity Workout</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-300">Antigravity Workout</span>
           </div>
         </div>
       </div>
 
       <div className="flex gap-4 mt-8">
-        <button
-          onClick={onClose}
+        <button aria-label="Fechar"           onClick={onClose}
           className="w-14 h-14 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg border border-gray-700 active:scale-95 transition-transform"
         >
           <X size={24} />
         </button>
-        <button
-          onClick={handleShare}
+        <button aria-label="Botão de Ação"           onClick={handleShare}
           disabled={isGenerating}
           className="h-14 px-8 bg-primary text-white font-black rounded-full flex items-center gap-2 shadow-[0_5px_20px_rgba(0,200,150,0.4)] active:scale-95 transition-transform disabled:opacity-50"
         >

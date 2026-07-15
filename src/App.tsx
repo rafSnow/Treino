@@ -87,17 +87,17 @@ function App() {
               { id: 'biometrics', icon: Scale, label: 'Corpo' },
               { id: 'settings', icon: SettingsIcon, label: 'Ajustes' }
             ].map((tab) => (
-              <button
+              <button aria-label="Botão" 
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
                 className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all duration-200 ${
                   activeTab === tab.id 
                     ? 'text-primary scale-110' 
-                    : 'text-gray-400 active:scale-95'
+                    : 'text-gray-600 dark:text-gray-400 active:scale-95'
                 }`}
               >
                 <tab.icon size={22} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
-                <span className={`text-[10px] font-bold uppercase tracking-tight ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`}>
+                <span className={`text-xs font-bold uppercase tracking-tight ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`}>
                   {tab.label}
                 </span>
               </button>

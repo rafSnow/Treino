@@ -127,13 +127,13 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Treinar</h1>
         <div className="flex gap-2">
-          <button 
+          <button aria-label="Botão de Ação" 
             onClick={onOpenCatalog}
-            className="bg-white dark:bg-gray-800 text-gray-500 border border-gray-200 dark:border-gray-700 p-2 rounded-xl shadow-sm hover:scale-105 transition-transform flex items-center gap-1 text-xs font-bold uppercase"
+            className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 p-2 rounded-xl shadow-sm hover:scale-105 transition-transform flex items-center gap-1 text-xs font-bold uppercase"
           >
             Catálogo
           </button>
-          <button 
+          <button aria-label="Adicionar" 
             onClick={handleAddNew}
             className="bg-primary text-white p-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
           >
@@ -144,10 +144,10 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
 
       <div className="space-y-4">
         {rotinas?.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-700 dark:text-gray-300">
             <Play size={48} className="mx-auto mb-4 opacity-20" />
             <p>Você ainda não criou nenhuma ficha de treino.</p>
-            <button 
+            <button aria-label="Adicionar" 
               onClick={handleAddNew}
               className="mt-4 text-primary font-bold"
             >
@@ -174,12 +174,12 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold text-xl">{routine.nome}</h3>
                       {isSuggested && (
-                        <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-tighter">
+                        <span className="bg-primary/10 text-primary text-xs font-black px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-tighter">
                           <CalendarCheck size={10} /> Sugestão de Hoje
                         </span>
                       )}
                     </div>
-                    <div className="flex gap-3 text-sm text-gray-500 font-medium">
+                    <div className="flex gap-3 text-sm text-gray-700 dark:text-gray-300 font-medium">
                       <span>{routine.exercicios.length} exercícios</span>
                       <span>&bull;</span>
                       <span>{totalSeries} séries</span>
@@ -188,16 +188,16 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
                     </div>
                   </div>
                   <div className="flex gap-1">
-                    <button 
+                    <button aria-label="Botão" 
                       onClick={() => handleEdit(routine)}
-                      className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                      className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                       title="Editar Rotina"
                     >
                       <Edit2 size={18} />
                     </button>
-                    <button 
+                    <button aria-label="Botão" 
                       onClick={() => routine.id && handleDelete(routine.id, routine.nome)}
-                      className="p-2 text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded-xl transition-colors"
+                      className="p-2 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded-xl transition-colors"
                       title="Excluir Rotina"
                     >
                       <Trash2 size={18} />
@@ -206,21 +206,21 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
                 </div>
 
                 <div className="flex gap-2">
-                  <button 
+                  <button aria-label="Botão" 
                     onClick={() => handleShare(routine)}
-                    className="p-3 text-gray-500 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center"
+                    className="p-3 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center"
                     title="Compartilhar"
                   >
                     <Share2 size={20} />
                   </button>
-                  <button 
+                  <button aria-label="Botão" 
                     onClick={() => handleClone(routine)}
-                    className="p-3 text-gray-500 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center"
+                    className="p-3 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center"
                     title="Clonar Rotina"
                   >
                     <Copy size={20} />
                   </button>
-                  <button 
+                  <button aria-label="Botão" 
                     className="flex-1 bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all shadow-sm"
                     onClick={() => startWorkout(routine)}
                   >

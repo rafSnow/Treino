@@ -28,14 +28,14 @@ const OneRMCalculator: React.FC<OneRMCalculatorProps> = ({ onClose }) => {
             <Calculator className="text-primary" size={24} />
             <h2 className="text-xl font-bold">Calculadora 1RM</h2>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+          <button aria-label="Fechar" onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
             <X size={24} />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Peso Levantado (kg)</label>
+            <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Peso Levantado (kg)</label>
             <input
               type="number"
               value={peso}
@@ -45,7 +45,7 @@ const OneRMCalculator: React.FC<OneRMCalculatorProps> = ({ onClose }) => {
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Repetições Realizadas</label>
+            <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Repetições Realizadas</label>
             <input
               type="number"
               value={reps}
@@ -62,7 +62,7 @@ const OneRMCalculator: React.FC<OneRMCalculatorProps> = ({ onClose }) => {
             </p>
           </div>
 
-          <p className="text-[10px] text-gray-400 text-center mt-4">
+          <p className="text-xs text-gray-600 dark:text-gray-400 text-center mt-4">
             * Baseado na fórmula de Brzycki. A precisão é maior para repetições abaixo de 10.
           </p>
         </div>

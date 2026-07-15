@@ -94,12 +94,12 @@ const RoutineImporter: React.FC = () => {
             <Download size={40} className="animate-bounce" />
           </div>
           <h2 className="text-2xl font-black leading-tight">Nova Rotina Encontrada!</h2>
-          <p className="text-gray-500 dark:text-gray-400 font-medium">
+          <p className="text-gray-500 dark:text-gray-600 dark:text-gray-400 font-medium">
             Você recebeu a ficha <strong>{importData.n}</strong>. Deseja adicioná-la aos seus treinos?
           </p>
 
           <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 text-left space-y-2 mt-4 max-h-48 overflow-y-auto">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Exercícios incluídos:</span>
+            <span className="text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-widest">Exercícios incluídos:</span>
             {importData.e.map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-sm font-bold">
                 <Dumbbell size={14} className="text-primary" />
@@ -110,13 +110,13 @@ const RoutineImporter: React.FC = () => {
         </div>
 
         <div className="p-6 pt-0 flex gap-3">
-          <button
+          <button aria-label="Botão" 
             onClick={() => setImportData(null)}
-            className="flex-1 py-4 font-bold text-gray-400 hover:text-gray-600 transition-colors"
+            className="flex-1 py-4 font-bold text-gray-600 dark:text-gray-400 hover:text-gray-600 transition-colors"
           >
             RECUSAR
           </button>
-          <button
+          <button aria-label="Botão de Ação" 
             onClick={handleImport}
             className="flex-[2] bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all"
           >
