@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import ExerciseList from './ExerciseList'
 import { History as HistoryIcon, Settings as SettingsIcon, Play, Scale, HeartPulse } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 import RoutineList from './RoutineList'
 import WorkoutSession from './WorkoutSession'
@@ -44,69 +45,109 @@ function App() {
     return <SplashScreen />;
   }
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'catalog':
+        return <ExerciseList onBack={() => setActiveTab('workout')} />
+      case 'workout':
+        return <RoutineList onOpenCatalog={() => setActiveTab('catalog')} />
+      case 'history':
+        return <History />
+      case 'biometrics':
+        return <Biometrics />
+      case 'cardio':
+        return <Cardio />
+      case 'settings':
+        return <Settings />
+      default:
+        return <History />
+    }
+  }
+
   const renderAppContent = () => {
-    if (activeWorkout) {
-      return <WorkoutSession />
-    }
-
-    const renderTabContent = () => {
-      switch (activeTab) {
-        case 'catalog':
-          return <ExerciseList onBack={() => setActiveTab('workout')} />
-        case 'workout':
-          return <RoutineList onOpenCatalog={() => setActiveTab('catalog')} />
-        case 'history':
-          return <History />
-        case 'biometrics':
-          return <Biometrics />
-        case 'cardio':
-          return <Cardio />
-        case 'settings':
-          return <Settings />
-        default:
-          return <History />
-      }
-    }
-
     return (
-      <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-[#1a1a1a] text-gray-900 dark:text-gray-100 overflow-hidden">
-        {/* Conteúdo Principal com Scroll Independente */}
-        <main className="flex-1 overflow-y-auto scrollbar-hide">
-          <div className="max-w-md mx-auto w-full min-h-full flex flex-col">
-            {renderTabContent()}
-          </div>
-        </main>
+      <AnimatePresence mode="wait">
+        {activeWorkout ? (
+          <motion.div 
+            key="workout-session"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="h-full w-full"
+          >
+            <WorkoutSession />
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="main-app"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col h-full w-full bg-gray-50 dark:bg-[#1a1a1a] text-gray-900 dark:text-gray-100 overflow-hidden"
+          >
+            {/* Conteúdo Principal com Scroll Independente */}
+            <main className="flex-1 overflow-y-auto scrollbar-hide">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, x: -15 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 15 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="max-w-md mx-auto w-full min-h-full flex flex-col"
+                >
+                  {renderTabContent()}
+                </motion.div>
+              </AnimatePresence>
+            </main>
 
-        {/* Barra de Navegação Inferior Otimizada */}
-        <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 px-2 pt-2 pb-safe z-50">
-          <div className="max-w-md mx-auto flex justify-around items-center">
-            {[
-              { id: 'workout', icon: Play, label: 'Treinar' },
-              { id: 'history', icon: HistoryIcon, label: 'Histórico' },
-              { id: 'cardio', icon: HeartPulse, label: 'Cardio' },
-              { id: 'biometrics', icon: Scale, label: 'Corpo' },
-              { id: 'settings', icon: SettingsIcon, label: 'Ajustes' }
-            ].map((tab) => (
-              <button aria-label="Botão" 
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all duration-200 ${
-                  activeTab === tab.id 
-                    ? 'text-primary scale-110' 
-                    : 'text-gray-600 dark:text-gray-400 active:scale-95'
-                }`}
-              >
-                <tab.icon size={22} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
-                <span className={`text-xs font-bold uppercase tracking-tight ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`}>
-                  {tab.label}
-                </span>
-              </button>
-            ))}
-          </div>
-          {/* Espaçador para Safe Area inferior */}
-          <div className="h-[env(safe-area-inset-bottom)]" />
-        </nav>
-      </div>
+            {/* Barra de Navegação Inferior Otimizada */}
+            <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 px-2 pt-2 pb-safe z-50">
+              <div className="max-w-md mx-auto flex justify-around items-center">
+                {[
+                  { id: 'workout', icon: Play, label: 'Treinar' },
+                  { id: 'history', icon: HistoryIcon, label: 'Histórico' },
+                  { id: 'cardio', icon: HeartPulse, label: 'Cardio' },
+                  { id: 'biometrics', icon: Scale, label: 'Corpo' },
+                  { id: 'settings', icon: SettingsIcon, label: 'Ajustes' }
+                ].map((tab) => (
+                  <button aria-label={tab.label} title={tab.label}
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as Tab)}
+                    className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all duration-200 relative ${
+                      activeTab === tab.id 
+                        ? 'text-primary' 
+                        : 'text-gray-600 dark:text-gray-400 active:scale-95'
+                    }`}
+                  >
+                    {activeTab === tab.id && (
+                      <motion.div
+                        layoutId="activeTabIndicator"
+                        className="absolute inset-0 bg-primary/10 rounded-xl"
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                      />
+                    )}
+                    <motion.div 
+                      animate={activeTab === tab.id ? { scale: 1.1 } : { scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                      className="relative z-10"
+                    >
+                      <tab.icon size={22} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                    </motion.div>
+                    <span className={`text-xs font-bold uppercase tracking-tight relative z-10 transition-opacity duration-200 ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`}>
+                      {tab.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {/* Espaçador para Safe Area inferior */}
+              <div className="h-[env(safe-area-inset-bottom)]" />
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     )
   }
 
