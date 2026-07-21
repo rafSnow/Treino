@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { db } from './db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { exportDB, importDB } from 'dexie-export-import';
-import { Download, Upload, Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info, Smartphone, Calendar, Bell, Volume2, Vibrate, Moon, Sun, Monitor } from 'lucide-react';
+import { Download, Upload, Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info, Smartphone, Calendar, Bell, Volume2, Vibrate, Moon, Sun, Monitor, User } from 'lucide-react';
 import { useWorkoutStore } from './store';
 import { useConfirm } from './ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -24,6 +24,22 @@ const Settings: React.FC = () => {
 
   const somEnabled = configuracoes.find(c => c.chave === 'som')?.valor !== false;
   const vibracaoEnabled = configuracoes.find(c => c.chave === 'vibracao')?.valor !== false;
+  const dataNascimentoConfig = configuracoes.find(c => c.chave === 'data_nascimento')?.valor as string || '';
+
+  const updateDataNascimento = async (dataStr: string) => {
+    try {
+      const conf = configuracoes.find(c => c.chave === 'data_nascimento');
+      if (conf) {
+        await db.configuracoes.update(conf.id!, { valor: dataStr });
+      } else {
+        await db.configuracoes.add({ chave: 'data_nascimento', valor: dataStr });
+      }
+      toast.success('Data de nascimento salva!');
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao salvar data de nascimento');
+    }
+  };
 
   const toggleConfig = async (chave: string, currentValue: boolean) => {
     try {
@@ -202,6 +218,27 @@ const Settings: React.FC = () => {
             <Moon size={18} className="mb-1" />
             <span className="text-xs font-bold uppercase">Escuro</span>
           </button>
+        </div>
+      </section>
+
+      {/* Perfil Biológico */}
+      <section className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-4">
+          <User className="text-primary" size={20} />
+          <h2 className="font-bold text-lg">Perfil e Metabolismo</h2>
+        </div>
+        <p className="text-xs text-gray-700 dark:text-gray-300 mb-4">Esses dados auxiliam no cálculo de queima de calorias estimadas por treino.</p>
+        
+        <div className="space-y-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest">DATA DE NASCIMENTO</label>
+            <input
+              type="date"
+              value={dataNascimentoConfig}
+              onChange={(e) => updateDataNascimento(e.target.value)}
+              className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold text-sm"
+            />
+          </div>
         </div>
       </section>
 

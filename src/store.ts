@@ -33,7 +33,7 @@ interface WorkoutStore {
   setTheme: (theme: 'system' | 'light' | 'dark') => void;
   
   startWorkout: (rotina: Rotina) => void;
-  finishWorkout: () => Promise<void>;
+  finishWorkout: (meta?: { duracao_minutos?: number, rpe_sessao?: number, calorias?: number, fc_media?: number }) => Promise<void>;
   toggleSerie: (exercicio_id: number, serieIndex: number, data: Partial<Serie>) => void;
   setSessaoNotas: (notas: string) => void;
   setExercicioNotas: (exercicio_id: number, notas: string) => void;
@@ -111,7 +111,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
         });
       },
 
-      finishWorkout: async () => {
+      finishWorkout: async (meta) => {
         const { activeWorkout } = get();
         if (!activeWorkout) return;
 
@@ -121,7 +121,11 @@ export const useWorkoutStore = create<WorkoutStore>()(
             data_inicio: activeWorkout.data_inicio,
             data_fim: new Date(),
             notas: activeWorkout.notas,
-            exercicios_realizados: activeWorkout.exercicios_realizados
+            exercicios_realizados: activeWorkout.exercicios_realizados,
+            duracao_minutos: meta?.duracao_minutos,
+            rpe_sessao: meta?.rpe_sessao,
+            calorias: meta?.calorias,
+            fc_media: meta?.fc_media
           };
           
           await db.sessoes.add(sessao);

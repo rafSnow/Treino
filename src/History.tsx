@@ -137,9 +137,18 @@ const History: React.FC = () => {
                         </span>
                       ) : null;
                     })()}
-                    {sessao.data_fim && (
+                    {sessao.duracao_minutos ? (
+                      <span className="text-xs font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full border border-blue-500/20 uppercase">
+                        {sessao.duracao_minutos} Min
+                      </span>
+                    ) : sessao.data_fim ? (
                       <span className="text-xs font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full border border-blue-500/20 uppercase">
                         {Math.max(1, Math.round((new Date(sessao.data_fim).getTime() - new Date(sessao.data_inicio).getTime()) / 60000))} Min
+                      </span>
+                    ) : null}
+                    {sessao.calorias && (
+                      <span className="text-xs font-bold text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full border border-orange-500/20 uppercase">
+                        {sessao.calorias} kcal
                       </span>
                     )}
                   </div>

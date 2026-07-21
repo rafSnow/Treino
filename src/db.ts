@@ -55,6 +55,10 @@ export interface SessaoTreino {
     notas?: string;
     series: Serie[];
   }[];
+  duracao_minutos?: number;
+  rpe_sessao?: number;
+  calorias?: number;
+  fc_media?: number;
 }
 
 export interface Configuracao {
