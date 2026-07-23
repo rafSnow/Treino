@@ -7,11 +7,17 @@ import { seedDatabase } from './seed'
 import { AuthProvider, useAuth } from './AuthContext'
 import SplashScreen from './SplashScreen'
 
-seedDatabase().catch(console.error);
+import { useEffect } from 'react';
 
 const RootApp = () => {
   const { user, loading } = useAuth();
   
+  useEffect(() => {
+    if (user) {
+      seedDatabase().catch(console.error);
+    }
+  }, [user]);
+
   if (loading) {
     return <SplashScreen />;
   }
