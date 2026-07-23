@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Biometria } from './db';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -9,7 +9,8 @@ import toast from 'react-hot-toast';
 import PhotoComparison from './PhotoComparison';
 
 const Biometrics: React.FC = () => {
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [formType, setFormType] = useState<'peso' | 'perimetria' | 'dobras' | 'fotos' | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<'peso' | 'percentual_gordura' | 'massa_muscular'>('peso');
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [isComparing, setIsComparing] = useState(false);
@@ -21,27 +22,12 @@ const Biometrics: React.FC = () => {
   const [fotoLado, setFotoLado] = useState<string | undefined>(undefined);
   const [fotoCostas, setFotoCostas] = useState<string | undefined>(undefined);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
-  
-  // Form Tab State
-  const [activeTab, setActiveTab] = useState<'basico' | 'perimetria' | 'dobras' | 'fotos'>('basico');
 
   const medicoes = useLiveQuery(() => db.biometria.orderBy('data').toArray()) || [];
 
   const updateForm = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
-  // Auto-cálculo de massa magra
-  useEffect(() => {
-    if (formData.peso && formData.percentual_gordura && !formData.massa_muscular) {
-      const p = parseFloat(formData.peso);
-      const g = parseFloat(formData.percentual_gordura);
-      if (!isNaN(p) && !isNaN(g)) {
-        const massaMagra = p - (p * (g / 100));
-        updateForm('massa_muscular', massaMagra.toFixed(1));
-      }
-    }
-  }, [formData.peso, formData.percentual_gordura]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -106,7 +92,7 @@ const Biometrics: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.peso) {
+    if (formType === 'peso' && !formData.peso) {
       toast.error('O Peso é obrigatório.');
       return;
     }
@@ -116,7 +102,7 @@ const Biometrics: React.FC = () => {
       
       const nova: Biometria = {
         data: new Date(),
-        peso: parseFloat(formData.peso),
+        peso: parseField('peso'),
         percentual_gordura: parseField('percentual_gordura'),
         massa_muscular: parseField('massa_muscular'),
         
@@ -163,7 +149,7 @@ const Biometrics: React.FC = () => {
 
       await db.biometria.add(nova);
       toast.success('Medição salva com sucesso!');
-      setIsFormOpen(false);
+      setFormType(null);
       resetForm();
     } catch (error) {
       console.error(error);
@@ -177,7 +163,6 @@ const Biometrics: React.FC = () => {
     setFotoFrente(undefined);
     setFotoLado(undefined);
     setFotoCostas(undefined);
-    setActiveTab('basico');
   };
 
   const handleDelete = async (id: number) => {
@@ -242,7 +227,7 @@ const Biometrics: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Corpo</h1>
         <button aria-label="Nova Medição" 
-          onClick={() => setIsFormOpen(true)}
+          onClick={() => setShowActionSheet(true)}
           className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
         >
           <Plus size={24} />
@@ -358,7 +343,12 @@ const Biometrics: React.FC = () => {
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-baseline gap-2">
-                  <p className="font-bold text-lg">{m.peso} kg</p>
+                  <p className="font-bold text-lg">
+                    {m.peso ? `${m.peso} kg` : 
+                     (m.cintura || m.torax || m.braco_relaxado_d || m.coxa_medial_d || m.perna_d) ? 'Perimetria' :
+                     (m.dobra_peitoral || m.dobra_abdominal) ? 'Dobras Cutâneas' :
+                     (m.fotos?.length || m.foto_frente || m.foto_lado || m.foto_costas) ? 'Fotos de Progresso' : 'Registro corporal'}
+                  </p>
                   {m.percentual_gordura && <span className="text-xs text-orange-500 font-bold bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">{m.percentual_gordura}% BF</span>}
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">{format(new Date(m.data), 'PPP', { locale: ptBR })}</p>
@@ -407,55 +397,67 @@ const Biometrics: React.FC = () => {
         <PhotoComparison medicoes={medicoes} onClose={() => setIsComparing(false)} />
       )}
 
-      {/* Modal de Formulário Completo (Bottom Sheet Full Width) */}
-      {isFormOpen && (
+      {/* Action Sheet para escolher o tipo de medição */}
+      {showActionSheet && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end animate-in fade-in duration-200" onClick={() => setShowActionSheet(false)}>
+          <div className="bg-white dark:bg-gray-800 w-full sm:max-w-2xl sm:mx-auto sm:rounded-t-3xl rounded-t-3xl shadow-2xl overflow-hidden p-6 animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4 text-center">O que você deseja registrar?</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <button onClick={() => { setShowActionSheet(false); setFormType('peso'); }} className="flex flex-col items-center gap-3 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 hover:text-primary transition-all active:scale-95">
+                <Scale size={32} />
+                <span className="font-bold text-sm">Peso</span>
+              </button>
+              <button onClick={() => { setShowActionSheet(false); setFormType('perimetria'); }} className="flex flex-col items-center gap-3 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 hover:text-primary transition-all active:scale-95">
+                <Ruler size={32} />
+                <span className="font-bold text-sm">Perimetria</span>
+              </button>
+              <button onClick={() => { setShowActionSheet(false); setFormType('dobras'); }} className="flex flex-col items-center gap-3 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 hover:text-primary transition-all active:scale-95">
+                <Activity size={32} />
+                <span className="font-bold text-sm">Dobras Cutâneas</span>
+              </button>
+              <button onClick={() => { setShowActionSheet(false); setFormType('fotos'); }} className="flex flex-col items-center gap-3 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border-2 border-transparent hover:border-primary/20 hover:bg-primary/5 hover:text-primary transition-all active:scale-95">
+                <Camera size={32} />
+                <span className="font-bold text-sm">Fotos de Progresso</span>
+              </button>
+            </div>
+            <button onClick={() => setShowActionSheet(false)} className="w-full mt-6 py-4 font-bold text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Formulário Específico (Bottom Sheet Full Width) */}
+      {formType && (
         <div className="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end animate-in fade-in duration-200">
           <div className="bg-white dark:bg-gray-800 w-full h-[95vh] sm:h-[90vh] sm:max-w-2xl sm:mx-auto sm:rounded-t-3xl rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300 shadow-2xl overflow-hidden">
             
             {/* Header Fixo */}
             <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-800 z-10">
-              <h2 className="text-xl font-bold">Nova Medição</h2>
-              <button aria-label="Fechar Formulário" onClick={() => setIsFormOpen(false)} className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"><X size={20}/></button>
+              <h2 className="text-xl font-bold">
+                {formType === 'peso' && 'Registrar Peso'}
+                {formType === 'perimetria' && 'Registrar Perimetria'}
+                {formType === 'dobras' && 'Registrar Dobras Cutâneas'}
+                {formType === 'fotos' && 'Registrar Fotos'}
+              </h2>
+              <button aria-label="Fechar Formulário" onClick={() => setFormType(null)} className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"><X size={20}/></button>
             </div>
             
             {/* Corpo Rolável */}
             <div className="flex-1 overflow-y-auto p-5 pb-32">
-              {/* Navegação por Abas */}
-              <div className="flex overflow-x-auto gap-2 mb-6 scrollbar-hide pb-2">
-                <button type="button" onClick={() => setActiveTab('basico')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'basico' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Básico</button>
-                <button type="button" onClick={() => setActiveTab('perimetria')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'perimetria' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Perimetria</button>
-                <button type="button" onClick={() => setActiveTab('dobras')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'dobras' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Dobras Cutâneas</button>
-                <button type="button" onClick={() => setActiveTab('fotos')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'fotos' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Fotos</button>
-              </div>
-
               <form id="biometria-form" onSubmit={handleSubmit} className="space-y-6">
               
-              {/* ABA BÁSICO */}
-              <div className={activeTab === 'basico' ? 'block' : 'hidden'}>
+              {/* FORMULÁRIO: PESO */}
+              {formType === 'peso' && (
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Peso (kg) *</label>
-                    <input required type="number" step="0.1" value={formData.peso || ''} onChange={e => updateForm('peso', e.target.value)} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold text-base" placeholder="Ex: 80.5" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">% Gordura</label>
-                      <input type="number" step="0.1" value={formData.percentual_gordura || ''} onChange={e => updateForm('percentual_gordura', e.target.value)} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-orange-500 outline-none transition-all font-bold text-base" placeholder="BF %" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1 flex justify-between">
-                        <span>Massa Musc.</span>
-                        {(formData.peso && formData.percentual_gordura) && <span className="text-[8px] bg-primary/20 text-primary px-1 rounded">AUTO</span>}
-                      </label>
-                      <input type="number" step="0.1" value={formData.massa_muscular || ''} onChange={e => updateForm('massa_muscular', e.target.value)} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-red-500 outline-none transition-all font-bold text-base" placeholder="kg" />
-                    </div>
+                    <input required autoFocus type="number" step="0.1" value={formData.peso || ''} onChange={e => updateForm('peso', e.target.value)} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold text-2xl text-center" placeholder="Ex: 80.5" />
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* ABA PERIMETRIA */}
-              <div className={activeTab === 'perimetria' ? 'block space-y-4' : 'hidden'}>
+              {/* FORMULÁRIO: PERIMETRIA */}
+              {formType === 'perimetria' && (
+                <div className="space-y-4">
                 <p className="text-xs text-gray-500 mb-2 border-b pb-2 dark:border-gray-700"><Layers size={14} className="inline mr-1" />Tronco (cm)</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -516,9 +518,11 @@ const Biometrics: React.FC = () => {
                   </div>
                 </div>
               </div>
+              )}
 
-              {/* ABA DOBRAS CUTÂNEAS */}
-              <div className={activeTab === 'dobras' ? 'block space-y-4' : 'hidden'}>
+              {/* FORMULÁRIO: DOBRAS CUTÂNEAS */}
+              {formType === 'dobras' && (
+                <div className="space-y-4">
                 <p className="text-xs text-gray-500 mb-2 border-b pb-2 dark:border-gray-700"><Activity size={14} className="inline mr-1" />Dobras em Milímetros (mm)</p>
                 <div className="grid grid-cols-2 gap-4">
                   {[
@@ -537,9 +541,11 @@ const Biometrics: React.FC = () => {
                   ))}
                 </div>
               </div>
+              )}
 
-              {/* ABA FOTOS */}
-              <div className={activeTab === 'fotos' ? 'block' : 'hidden'}>
+              {/* FORMULÁRIO: FOTOS */}
+              {formType === 'fotos' && (
+                <div>
                 <p className="text-xs text-gray-500 mb-4 border-b pb-2 dark:border-gray-700">Adicione fotos padronizadas para facilitar a comparação visual da sua evolução.</p>
                 
                 <div className="grid grid-cols-3 gap-3 mb-6">
@@ -613,6 +619,7 @@ const Biometrics: React.FC = () => {
                   </div>
                 </div>
               </div>
+              )}
 
             </form>
             </div> {/* Fim do Corpo Rolável */}

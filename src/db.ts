@@ -70,7 +70,7 @@ export interface Configuracao {
 export interface Biometria {
   id?: number;
   data: Date;
-  peso: number;
+  peso?: number;
   percentual_gordura?: number;
   massa_muscular?: number;
   
