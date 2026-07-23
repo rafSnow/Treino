@@ -4,36 +4,39 @@ import { db, type Biometria } from './db';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera } from 'lucide-react';
+import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Biometrics: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<'peso' | 'percentual_gordura' | 'massa_muscular'>('peso');
+  const [carouselIndex, setCarouselIndex] = useState(0);
   
   // Form State
-  const [peso, setPeso] = useState('');
-  const [gordura, setGordura] = useState('');
-  const [musculo, setMusculo] = useState('');
-  const [cintura, setCintura] = useState('');
-  const [bracoD, setBracoD] = useState('');
-  const [bracoE, setBracoE] = useState('');
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [fotos, setFotos] = useState<string[]>([]);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+  
+  // Form Tab State
+  const [activeTab, setActiveTab] = useState<'basico' | 'perimetria' | 'dobras' | 'fotos'>('basico');
 
   const medicoes = useLiveQuery(() => db.biometria.orderBy('data').toArray()) || [];
 
+  const updateForm = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   // Auto-cálculo de massa magra
   useEffect(() => {
-    if (peso && gordura && !musculo) {
-      const p = parseFloat(peso);
-      const g = parseFloat(gordura);
+    if (formData.peso && formData.percentual_gordura && !formData.massa_muscular) {
+      const p = parseFloat(formData.peso);
+      const g = parseFloat(formData.percentual_gordura);
       if (!isNaN(p) && !isNaN(g)) {
         const massaMagra = p - (p * (g / 100));
-        setMusculo(massaMagra.toFixed(1));
+        updateForm('massa_muscular', massaMagra.toFixed(1));
       }
     }
-  }, [peso, gordura]); // intentionally only trigger on peso/gordura change
+  }, [formData.peso, formData.percentual_gordura]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -69,17 +72,55 @@ const Biometrics: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!peso) return;
+    if (!formData.peso) {
+      toast.error('O Peso é obrigatório.');
+      return;
+    }
 
     try {
+      const parseField = (field: string) => formData[field] ? parseFloat(formData[field]) : undefined;
+      
       const nova: Biometria = {
         data: new Date(),
-        peso: parseFloat(peso),
-        percentual_gordura: gordura ? parseFloat(gordura) : undefined,
-        massa_muscular: musculo ? parseFloat(musculo) : undefined,
-        cintura: cintura ? parseFloat(cintura) : undefined,
-        braco_d: bracoD ? parseFloat(bracoD) : undefined,
-        braco_e: bracoE ? parseFloat(bracoE) : undefined,
+        peso: parseFloat(formData.peso),
+        percentual_gordura: parseField('percentual_gordura'),
+        massa_muscular: parseField('massa_muscular'),
+        
+        // Perimetria
+        pescoco: parseField('pescoco'),
+        ombros: parseField('ombros'),
+        torax: parseField('torax'),
+        braco_relaxado_d: parseField('braco_relaxado_d'),
+        braco_relaxado_e: parseField('braco_relaxado_e'),
+        braco_contraido_d: parseField('braco_contraido_d'),
+        braco_contraido_e: parseField('braco_contraido_e'),
+        antebraco_d: parseField('antebraco_d'),
+        antebraco_e: parseField('antebraco_e'),
+        cintura: parseField('cintura'),
+        abdomen: parseField('abdomen'),
+        quadril: parseField('quadril'),
+        coxa_proximal_d: parseField('coxa_proximal_d'),
+        coxa_proximal_e: parseField('coxa_proximal_e'),
+        coxa_medial_d: parseField('coxa_medial_d'),
+        coxa_medial_e: parseField('coxa_medial_e'),
+        panturrilha_d: parseField('panturrilha_d'),
+        panturrilha_e: parseField('panturrilha_e'),
+
+        // Dobras
+        dobra_peitoral: parseField('dobra_peitoral'),
+        dobra_tricipital: parseField('dobra_tricipital'),
+        dobra_subescapular: parseField('dobra_subescapular'),
+        dobra_axilar: parseField('dobra_axilar'),
+        dobra_suprailiaca: parseField('dobra_suprailiaca'),
+        dobra_abdominal: parseField('dobra_abdominal'),
+        dobra_coxa: parseField('dobra_coxa'),
+
+        // Legacy compatibility
+        braco_d: parseField('braco_contraido_d'),
+        braco_e: parseField('braco_contraido_e'),
+        perna_d: parseField('coxa_medial_d'),
+        perna_e: parseField('coxa_medial_e'),
+
         fotos: fotos.length > 0 ? fotos : undefined
       };
 
@@ -94,13 +135,9 @@ const Biometrics: React.FC = () => {
   };
 
   const resetForm = () => {
-    setPeso('');
-    setGordura('');
-    setMusculo('');
-    setCintura('');
-    setBracoD('');
-    setBracoE('');
+    setFormData({});
     setFotos([]);
+    setActiveTab('basico');
   };
 
   const handleDelete = async (id: number) => {
@@ -131,11 +168,40 @@ const Biometrics: React.FC = () => {
 
   const ultimaMedicao = medicoes[medicoes.length - 1];
 
+  // Configuração do carrossel do quadro resumo
+  let carouselItems: { label: string, value: number, unit: string }[] = [];
+  if (ultimaMedicao) {
+    const possiveis = [
+      { key: 'cintura', label: 'Cintura', unit: 'cm' },
+      { key: 'abdomen', label: 'Abdômen', unit: 'cm' },
+      { key: 'quadril', label: 'Quadril', unit: 'cm' },
+      { key: 'braco_contraido_d', fallback: 'braco_d', label: 'Braço Dir.', unit: 'cm' },
+      { key: 'coxa_medial_d', fallback: 'perna_d', label: 'Coxa Dir.', unit: 'cm' },
+      { key: 'panturrilha_d', label: 'Panturrilha Dir.', unit: 'cm' },
+      { key: 'torax', label: 'Tórax', unit: 'cm' },
+      { key: 'ombros', label: 'Ombros', unit: 'cm' },
+    ];
+    
+    possiveis.forEach(item => {
+      const val = ultimaMedicao[item.key as keyof Biometria] || (item.fallback && ultimaMedicao[item.fallback as keyof Biometria]);
+      if (val !== undefined) {
+        carouselItems.push({ label: item.label, value: val as number, unit: item.unit });
+      }
+    });
+
+    if (carouselItems.length === 0) {
+      carouselItems.push({ label: 'Cintura', value: 0, unit: 'cm' }); // Fallback visual
+    }
+  }
+
+  const prevCarousel = () => setCarouselIndex(prev => prev === 0 ? carouselItems.length - 1 : prev - 1);
+  const nextCarousel = () => setCarouselIndex(prev => prev === carouselItems.length - 1 ? 0 : prev + 1);
+
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Corpo</h1>
-        <button aria-label="Botão" 
+        <button aria-label="Nova Medição" 
           onClick={() => setIsFormOpen(true)}
           className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
         >
@@ -146,7 +212,7 @@ const Biometrics: React.FC = () => {
       {/* Resumo atual */}
       {ultimaMedicao && (
         <div className="grid grid-cols-2 gap-4">
-          <button aria-label="Botão" 
+          <button aria-label="Ver gráfico de Peso" 
             onClick={() => setSelectedMetric('peso')}
             className={`p-4 rounded-2xl shadow-sm border transition-all text-left flex items-center gap-3 ${selectedMetric === 'peso' ? 'bg-primary/5 border-primary' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}
           >
@@ -158,7 +224,8 @@ const Biometrics: React.FC = () => {
               <p className="text-xl font-bold leading-tight">{ultimaMedicao.peso}<span className="text-xs ml-0.5">kg</span></p>
             </div>
           </button>
-          <button aria-label="Botão" 
+          
+          <button aria-label="Ver gráfico de Gordura" 
             onClick={() => setSelectedMetric('percentual_gordura')}
             className={`p-4 rounded-2xl shadow-sm border transition-all text-left flex items-center gap-3 ${selectedMetric === 'percentual_gordura' ? 'bg-orange-500/5 border-orange-500' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}
           >
@@ -170,7 +237,8 @@ const Biometrics: React.FC = () => {
               <p className="text-xl font-bold leading-tight">{ultimaMedicao.percentual_gordura || '--'}<span className="text-xs ml-0.5">%</span></p>
             </div>
           </button>
-          <button aria-label="Botão" 
+          
+          <button aria-label="Ver gráfico de Massa Muscular" 
             onClick={() => setSelectedMetric('massa_muscular')}
             className={`p-4 rounded-2xl shadow-sm border transition-all text-left flex items-center gap-3 ${selectedMetric === 'massa_muscular' ? 'bg-red-500/5 border-red-500' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}
           >
@@ -182,14 +250,20 @@ const Biometrics: React.FC = () => {
               <p className="text-xl font-bold leading-tight">{ultimaMedicao.massa_muscular || '--'}<span className="text-xs ml-0.5">kg</span></p>
             </div>
           </button>
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-3">
-            <div className="bg-blue-500/10 p-2 rounded-lg text-blue-500">
-              <Ruler size={24} />
+          
+          <div className="bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between relative overflow-hidden group">
+            <button aria-label="Medida Anterior" onClick={prevCarousel} className="p-2 text-gray-400 hover:text-blue-500 z-10"><ChevronLeft size={20}/></button>
+            <div className="flex flex-col items-center justify-center flex-1">
+              <div className="text-blue-500/50 absolute top-2 right-2"><Ruler size={32} /></div>
+              <p className="text-[10px] uppercase font-bold text-gray-600 dark:text-gray-400 text-center w-full truncate">
+                {carouselItems[carouselIndex]?.label || 'Medidas'}
+              </p>
+              <p className="text-xl font-bold leading-tight z-10">
+                {carouselItems[carouselIndex]?.value > 0 ? carouselItems[carouselIndex].value : '--'}
+                <span className="text-xs ml-0.5">{carouselItems[carouselIndex]?.unit}</span>
+              </p>
             </div>
-            <div>
-              <p className="text-xs uppercase font-bold text-gray-600 dark:text-gray-400">Cintura</p>
-              <p className="text-xl font-bold leading-tight">{ultimaMedicao.cintura || '--'}<span className="text-xs ml-0.5">cm</span></p>
-            </div>
+            <button aria-label="Próxima Medida" onClick={nextCarousel} className="p-2 text-gray-400 hover:text-blue-500 z-10"><ChevronRight size={20}/></button>
           </div>
         </div>
       )}
@@ -239,7 +313,7 @@ const Biometrics: React.FC = () => {
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">{format(new Date(m.data), 'PPP', { locale: ptBR })}</p>
               </div>
-              <button aria-label="Botão" onClick={() => m.id && handleDelete(m.id)} className="p-2 text-gray-300 hover:text-red-500 transition-colors">
+              <button aria-label="Excluir" onClick={() => m.id && handleDelete(m.id)} className="p-2 text-gray-300 hover:text-red-500 transition-colors">
                 <Trash2 size={18} />
               </button>
             </div>
@@ -247,7 +321,9 @@ const Biometrics: React.FC = () => {
             <div className="flex flex-wrap gap-2 text-xs text-gray-700 dark:text-gray-300">
               {m.massa_muscular && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Músculo: <strong className="text-gray-700 dark:text-gray-300">{m.massa_muscular}kg</strong></span>}
               {m.cintura && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Cintura: <strong className="text-gray-700 dark:text-gray-300">{m.cintura}cm</strong></span>}
-              {(m.braco_d || m.braco_e) && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Braço: <strong className="text-gray-700 dark:text-gray-300">{m.braco_d}/{m.braco_e}cm</strong></span>}
+              {(m.braco_contraido_d || m.braco_d) && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Braço D.: <strong className="text-gray-700 dark:text-gray-300">{m.braco_contraido_d || m.braco_d}cm</strong></span>}
+              {(m.coxa_medial_d || m.perna_d) && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Coxa D.: <strong className="text-gray-700 dark:text-gray-300">{m.coxa_medial_d || m.perna_d}cm</strong></span>}
+              {m.panturrilha_d && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Panturrilha D.: <strong className="text-gray-700 dark:text-gray-300">{m.panturrilha_d}cm</strong></span>}
             </div>
 
             {m.fotos && m.fotos.length > 0 && (
@@ -270,134 +346,166 @@ const Biometrics: React.FC = () => {
       {/* Modal de Imagem Fullscreen */}
       {fullScreenImage && (
         <div className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4" onClick={() => setFullScreenImage(null)}>
-          <button aria-label="Botão" className="absolute top-6 right-6 text-white p-2 bg-white/10 rounded-full"><X size={24}/></button>
+          <button aria-label="Fechar Imagem" className="absolute top-6 right-6 text-white p-2 bg-white/10 rounded-full"><X size={24}/></button>
           <img src={fullScreenImage} className="max-w-full max-h-[90vh] object-contain rounded-lg" alt="Progresso Fullscreen" />
         </div>
       )}
 
-      {/* Modal de Formulário */}
+      {/* Modal de Formulário Completo */}
       {isFormOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-[100] p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 pb-10 sm:pb-6 shadow-xl animate-in slide-in-from-bottom duration-300 my-auto">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 pb-10 sm:pb-6 shadow-xl animate-in slide-in-from-bottom duration-300 mt-20 sm:my-auto max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-gray-800 z-10 py-2 border-b border-gray-100 dark:border-gray-700">
               <h2 className="text-xl font-bold">Nova Medição</h2>
-              <button aria-label="Botão" onClick={() => setIsFormOpen(false)}><X size={24}/></button>
+              <button aria-label="Fechar Formulário" onClick={() => setIsFormOpen(false)}><X size={24}/></button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Peso (kg) *</label>
-                <input
-                  required
-                  type="number"
-                  step="0.1"
-                  value={peso}
-                  onChange={e => setPeso(e.target.value)}
-                  className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold text-base"
-                  placeholder="Ex: 80.5"
-                />
-              </div>
+            
+            {/* Navegação por Abas */}
+            <div className="flex overflow-x-auto gap-2 mb-6 scrollbar-hide pb-2">
+              <button type="button" onClick={() => setActiveTab('basico')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'basico' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Básico</button>
+              <button type="button" onClick={() => setActiveTab('perimetria')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'perimetria' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Perimetria</button>
+              <button type="button" onClick={() => setActiveTab('dobras')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'dobras' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Dobras Cutâneas</button>
+              <button type="button" onClick={() => setActiveTab('fotos')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'fotos' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Fotos</button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">% Gordura</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={gordura}
-                    onChange={e => setGordura(e.target.value)}
-                    className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-orange-500 outline-none transition-all font-bold text-base"
-                    placeholder="BF %"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1 flex justify-between">
-                    <span>Massa Musc. (kg)</span>
-                    {(peso && gordura) && <span className="text-[8px] bg-primary/20 text-primary px-1 rounded">AUTO</span>}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={musculo}
-                    onChange={e => setMusculo(e.target.value)}
-                    className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-red-500 outline-none transition-all font-bold text-base"
-                    placeholder="Músculo kg"
-                  />
+              {/* ABA BÁSICO */}
+              <div className={activeTab === 'basico' ? 'block' : 'hidden'}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Peso (kg) *</label>
+                    <input required type="number" step="0.1" value={formData.peso || ''} onChange={e => updateForm('peso', e.target.value)} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold text-base" placeholder="Ex: 80.5" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">% Gordura</label>
+                      <input type="number" step="0.1" value={formData.percentual_gordura || ''} onChange={e => updateForm('percentual_gordura', e.target.value)} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-orange-500 outline-none transition-all font-bold text-base" placeholder="BF %" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1 flex justify-between">
+                        <span>Massa Musc.</span>
+                        {(formData.peso && formData.percentual_gordura) && <span className="text-[8px] bg-primary/20 text-primary px-1 rounded">AUTO</span>}
+                      </label>
+                      <input type="number" step="0.1" value={formData.massa_muscular || ''} onChange={e => updateForm('massa_muscular', e.target.value)} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-red-500 outline-none transition-all font-bold text-base" placeholder="kg" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Cintura (cm)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={cintura}
-                  onChange={e => setCintura(e.target.value)}
-                  className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-blue-500 outline-none transition-all font-bold text-base"
-                  placeholder="Ex: 85"
-                />
+              {/* ABA PERIMETRIA */}
+              <div className={activeTab === 'perimetria' ? 'block space-y-4' : 'hidden'}>
+                <p className="text-xs text-gray-500 mb-2 border-b pb-2 dark:border-gray-700"><Layers size={14} className="inline mr-1" />Tronco (cm)</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Cintura</label>
+                    <input type="number" step="0.1" value={formData.cintura || ''} onChange={e => updateForm('cintura', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Abdômen</label>
+                    <input type="number" step="0.1" value={formData.abdomen || ''} onChange={e => updateForm('abdomen', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Quadril</label>
+                    <input type="number" step="0.1" value={formData.quadril || ''} onChange={e => updateForm('quadril', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Tórax</label>
+                    <input type="number" step="0.1" value={formData.torax || ''} onChange={e => updateForm('torax', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Ombros</label>
+                    <input type="number" step="0.1" value={formData.ombros || ''} onChange={e => updateForm('ombros', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Pescoço</label>
+                    <input type="number" step="0.1" value={formData.pescoco || ''} onChange={e => updateForm('pescoco', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                </div>
+                
+                <p className="text-xs text-gray-500 mb-2 mt-4 border-b pb-2 dark:border-gray-700"><Layers size={14} className="inline mr-1" />Membros Superiores (Lado Direito)</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Braço (Contr.)</label>
+                    <input type="number" step="0.1" value={formData.braco_contraido_d || ''} onChange={e => updateForm('braco_contraido_d', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Braço (Relax.)</label>
+                    <input type="number" step="0.1" value={formData.braco_relaxado_d || ''} onChange={e => updateForm('braco_relaxado_d', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Antebraço</label>
+                    <input type="number" step="0.1" value={formData.antebraco_d || ''} onChange={e => updateForm('antebraco_d', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-500 mb-2 mt-4 border-b pb-2 dark:border-gray-700"><Layers size={14} className="inline mr-1" />Membros Inferiores (Lado Direito)</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Coxa Proximal</label>
+                    <input type="number" step="0.1" value={formData.coxa_proximal_d || ''} onChange={e => updateForm('coxa_proximal_d', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Coxa Medial</label>
+                    <input type="number" step="0.1" value={formData.coxa_medial_d || ''} onChange={e => updateForm('coxa_medial_d', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">Panturrilha</label>
+                    <input type="number" step="0.1" value={formData.panturrilha_d || ''} onChange={e => updateForm('panturrilha_d', e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all text-sm font-bold" />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Braço Dir. (cm)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={bracoD}
-                    onChange={e => setBracoD(e.target.value)}
-                    className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-gray-500 outline-none transition-all font-bold text-base"
-                    placeholder="Dir"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-1">Braço Esq. (cm)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={bracoE}
-                    onChange={e => setBracoE(e.target.value)}
-                    className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-gray-500 outline-none transition-all font-bold text-base"
-                    placeholder="Esq"
-                  />
+              {/* ABA DOBRAS CUTÂNEAS */}
+              <div className={activeTab === 'dobras' ? 'block space-y-4' : 'hidden'}>
+                <p className="text-xs text-gray-500 mb-2 border-b pb-2 dark:border-gray-700"><Activity size={14} className="inline mr-1" />Dobras em Milímetros (mm)</p>
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { key: 'dobra_peitoral', label: 'Peitoral' },
+                    { key: 'dobra_tricipital', label: 'Tricipital' },
+                    { key: 'dobra_subescapular', label: 'Subescapular' },
+                    { key: 'dobra_axilar', label: 'Axilar Média' },
+                    { key: 'dobra_suprailiaca', label: 'Suprailíaca' },
+                    { key: 'dobra_abdominal', label: 'Abdominal' },
+                    { key: 'dobra_coxa', label: 'Coxa' },
+                  ].map(dobra => (
+                    <div key={dobra.key}>
+                      <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">{dobra.label}</label>
+                      <input type="number" step="0.1" value={formData[dobra.key] || ''} onChange={e => updateForm(dobra.key, e.target.value)} className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-orange-500 outline-none transition-all text-sm font-bold" />
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div>
+              {/* ABA FOTOS */}
+              <div className={activeTab === 'fotos' ? 'block' : 'hidden'}>
                 <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-2 mt-2">Fotos de Progresso</label>
                 <div className="flex flex-wrap gap-2">
                   {fotos.map((foto, idx) => (
                     <div key={idx} className="relative">
-                      <img src={foto} alt={`Preview ${idx}`} className="w-16 h-16 object-cover rounded-xl border border-gray-200 dark:border-gray-700" />
-                      <button aria-label="Botão" 
-                        type="button" 
-                        onClick={() => removePhoto(idx)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-md"
-                      >
-                        <X size={12} />
+                      <img src={foto} alt={`Preview ${idx}`} className="w-20 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700" />
+                      <button aria-label="Remover Foto" type="button" onClick={() => removePhoto(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md">
+                        <X size={14} />
                       </button>
                     </div>
                   ))}
                   
-                  <label className="w-16 h-16 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900">
-                    <Camera size={20} className="mb-1" />
-                    <span className="text-[8px] font-bold uppercase tracking-wider">Adicionar</span>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      multiple 
-                      className="hidden" 
-                      onChange={handlePhotoUpload} 
-                    />
+                  <label className="w-20 h-20 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900">
+                    <Camera size={24} className="mb-1" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Adicionar</span>
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} />
                   </label>
                 </div>
+                <p className="text-xs text-gray-500 mt-4 italic">Fotos são armazenadas localmente no seu dispositivo.</p>
               </div>
 
-              <button aria-label="Botão"                 type="submit"
-                className="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all mt-6"
-              >
-                <Save size={20} />
-                SALVAR MEDIÇÕES
-              </button>
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800 pb-2">
+                <button type="submit" className="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all">
+                  <Save size={20} />
+                  SALVAR MEDIÇÕES
+                </button>
+              </div>
             </form>
           </div>
         </div>

@@ -73,11 +73,47 @@ export interface Biometria {
   peso: number;
   percentual_gordura?: number;
   massa_muscular?: number;
+  
+  // Medidas Básicas Legadas (Mantidas para compatibilidade)
   cintura?: number;
   braco_d?: number;
   braco_e?: number;
   perna_d?: number;
   perna_e?: number;
+
+  // Perimetria (cm)
+  pescoco?: number;
+  ombros?: number;
+  torax?: number;
+  braco_relaxado_d?: number;
+  braco_relaxado_e?: number;
+  braco_contraido_d?: number;
+  braco_contraido_e?: number;
+  antebraco_d?: number;
+  antebraco_e?: number;
+  abdomen?: number;
+  quadril?: number;
+  coxa_proximal_d?: number;
+  coxa_proximal_e?: number;
+  coxa_medial_d?: number;
+  coxa_medial_e?: number;
+  panturrilha_d?: number;
+  panturrilha_e?: number;
+
+  // Dobras Cutâneas (mm)
+  dobra_peitoral?: number;
+  dobra_tricipital?: number;
+  dobra_subescapular?: number;
+  dobra_axilar?: number;
+  dobra_suprailiaca?: number;
+  dobra_abdominal?: number;
+  dobra_coxa?: number;
+
+  // Diâmetros Ósseos (mm)
+  diam_umero?: number;
+  diam_femur?: number;
+  diam_punho?: number;
+
   notas?: string;
   fotos?: string[];
 }
