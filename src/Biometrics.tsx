@@ -240,7 +240,13 @@ const Biometrics: React.FC = () => {
     }
   };
 
-  const ultimaMedicao = medicoes[medicoes.length - 1];
+  // Agrega todas as medições para formar o estado corporal "atual" mais recente
+  const ultimaMedicao = medicoes.length > 0 
+    ? medicoes.reduce((acc, curr) => {
+        const validEntries = Object.entries(curr).filter(([_, v]) => v !== undefined && v !== null && v !== '');
+        return { ...acc, ...Object.fromEntries(validEntries) };
+      }, {} as Biometria)
+    : undefined;
 
   // Configuração do carrossel do quadro resumo
   let carouselItems: { label: string, value: number, unit: string }[] = [];
