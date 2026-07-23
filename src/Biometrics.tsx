@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Biometria } from './db';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera, ChevronLeft, ChevronRight, Layers, SlidersHorizontal } from 'lucide-react';
+import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera, ChevronLeft, ChevronRight, Layers, SlidersHorizontal, Target } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PhotoComparison from './PhotoComparison';
 
@@ -22,8 +22,13 @@ const Biometrics: React.FC = () => {
   const [fotoLado, setFotoLado] = useState<string | undefined>(undefined);
   const [fotoCostas, setFotoCostas] = useState<string | undefined>(undefined);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+  
+  // Goals State
+  const [goalModalOpen, setGoalModalOpen] = useState(false);
+  const [goalValue, setGoalValue] = useState<string>('');
 
   const medicoes = useLiveQuery(() => db.biometria.orderBy('data').toArray()) || [];
+  const configuracoes = useLiveQuery(() => db.configuracoes.toArray()) || [];
 
   const updateForm = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -191,6 +196,50 @@ const Biometrics: React.FC = () => {
     massa_muscular: { label: 'Massa Muscular', color: '#ef4444', unit: 'kg' }
   };
 
+  const getConfig = (chave: string) => configuracoes.find(c => c.chave === chave)?.valor;
+  const currentGoal = getConfig(`meta_${selectedMetric}`) as number | undefined;
+
+  const calculateProgress = (start: number, current: number, goal: number) => {
+    if (start === goal) return 100;
+    if (start > goal) {
+      if (current <= goal) return 100;
+      if (current >= start) return 0;
+      return ((start - current) / (start - goal)) * 100;
+    }
+    if (start < goal) {
+      if (current >= goal) return 100;
+      if (current <= start) return 0;
+      return ((current - start) / (goal - start)) * 100;
+    }
+    return 0;
+  };
+
+  const handleSaveGoal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const chave = `meta_${selectedMetric}`;
+    const valorNum = parseFloat(goalValue);
+    
+    try {
+      if (isNaN(valorNum)) {
+        const existing = await db.configuracoes.where('chave').equals(chave).first();
+        if (existing?.id) {
+          await db.configuracoes.delete(existing.id);
+        }
+      } else {
+        const existing = await db.configuracoes.where('chave').equals(chave).first();
+        if (existing?.id) {
+          await db.configuracoes.update(existing.id, { valor: valorNum });
+        } else {
+          await db.configuracoes.add({ chave, valor: valorNum });
+        }
+      }
+      setGoalModalOpen(false);
+      toast.success('Meta atualizada!');
+    } catch(err) {
+      toast.error('Erro ao salvar meta.');
+    }
+  };
+
   const ultimaMedicao = medicoes[medicoes.length - 1];
 
   // Configuração do carrossel do quadro resumo
@@ -295,7 +344,31 @@ const Biometrics: React.FC = () => {
 
       {/* Gráfico de Evolução */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <h3 className="font-bold text-lg mb-6">Evolução: {metricConfig[selectedMetric].label}</h3>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-bold text-lg">Evolução: {metricConfig[selectedMetric].label}</h3>
+          <button 
+            onClick={() => { setGoalValue(currentGoal?.toString() || ''); setGoalModalOpen(true); }}
+            className="flex items-center gap-1.5 text-xs font-bold bg-green-500/10 text-green-600 dark:text-green-500 px-3 py-1.5 rounded-full hover:bg-green-500/20 transition-colors"
+          >
+            <Target size={14} />
+            {currentGoal ? `Meta: ${currentGoal}${metricConfig[selectedMetric].unit}` : 'Definir Meta'}
+          </button>
+        </div>
+
+        {currentGoal && chartData.length > 0 && ultimaMedicao && (
+          <div className="mb-6 bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
+            <div className="flex justify-between text-xs font-bold mb-2">
+              <span className="text-gray-500 flex flex-col items-start"><span className="text-[9px] uppercase tracking-wider">Início</span> {chartData[0].valor}{metricConfig[selectedMetric].unit}</span>
+              <span className="text-primary flex flex-col items-center"><span className="text-[9px] uppercase tracking-wider">Atual</span> {ultimaMedicao[selectedMetric]}{metricConfig[selectedMetric].unit}</span>
+              <span className="text-green-500 flex flex-col items-end"><span className="text-[9px] uppercase tracking-wider">Alvo</span> {currentGoal}{metricConfig[selectedMetric].unit}</span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+              <div className="bg-gradient-to-r from-primary to-green-500 h-3 rounded-full transition-all duration-1000 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1)]" style={{ width: `${calculateProgress(chartData[0].valor as number, ultimaMedicao[selectedMetric] as number, currentGoal)}%` }}></div>
+            </div>
+            <p className="text-[10px] text-center mt-2 text-gray-500 font-bold uppercase tracking-widest">{calculateProgress(chartData[0].valor as number, ultimaMedicao[selectedMetric] as number, currentGoal).toFixed(1)}% Concluído</p>
+          </div>
+        )}
+
         {chartData.length > 1 ? (
           <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -315,6 +388,15 @@ const Biometrics: React.FC = () => {
                   strokeWidth={3} 
                   dot={{ r: 4, fill: metricConfig[selectedMetric].color }}
                 />
+                {currentGoal && (
+                  <ReferenceLine 
+                    y={currentGoal} 
+                    stroke="#10b981" 
+                    strokeDasharray="4 4" 
+                    strokeWidth={2}
+                    label={{ position: 'insideTopLeft', value: `Meta: ${currentGoal}${metricConfig[selectedMetric].unit}`, fill: '#10b981', fontSize: 10, fontWeight: 'bold' }} 
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -631,6 +713,43 @@ const Biometrics: React.FC = () => {
                 SALVAR MEDIÇÕES
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Definir Meta */}
+      {goalModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setGoalModalOpen(false)}>
+          <div className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-green-500/10 text-green-500 p-3 rounded-xl">
+                <Target size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg leading-tight">Definir Meta</h3>
+                <p className="text-xs text-gray-500 font-medium">{metricConfig[selectedMetric].label}</p>
+              </div>
+            </div>
+            
+            <form onSubmit={handleSaveGoal} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-2">Alvo Desejado ({metricConfig[selectedMetric].unit})</label>
+                <input 
+                  type="number" 
+                  step="0.1" 
+                  autoFocus
+                  value={goalValue} 
+                  onChange={e => setGoalValue(e.target.value)} 
+                  className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-green-500 outline-none transition-all font-bold text-2xl text-center" 
+                  placeholder="Ex: 75" 
+                />
+                <p className="text-[10px] text-gray-500 mt-2 text-center">Deixe em branco para remover a meta.</p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setGoalModalOpen(false)} className="flex-1 py-3 font-bold text-gray-500 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">Cancelar</button>
+                <button type="submit" className="flex-1 py-3 font-bold text-white bg-green-500 rounded-xl shadow-lg shadow-green-500/20 hover:bg-green-600 transition-colors">Salvar Meta</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
