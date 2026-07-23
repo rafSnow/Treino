@@ -25,6 +25,8 @@ const Settings: React.FC = () => {
   const somEnabled = configuracoes.find(c => c.chave === 'som')?.valor !== false;
   const vibracaoEnabled = configuracoes.find(c => c.chave === 'vibracao')?.valor !== false;
   const dataNascimentoConfig = configuracoes.find(c => c.chave === 'data_nascimento')?.valor as string || '';
+  const alturaConfig = configuracoes.find(c => c.chave === 'altura_cm')?.valor as string || '';
+  const generoConfig = configuracoes.find(c => c.chave === 'genero')?.valor as string || '';
 
   const updateDataNascimento = async (dataStr: string) => {
     try {
@@ -52,6 +54,21 @@ const Settings: React.FC = () => {
     } catch (e) {
       console.error(e);
       toast.error('Erro ao salvar configuração');
+    }
+  };
+
+  const updateConfigValue = async (chave: string, valor: string | number) => {
+    try {
+      const conf = configuracoes.find(c => c.chave === chave);
+      if (conf) {
+        await db.configuracoes.update(conf.id!, { valor });
+      } else {
+        await db.configuracoes.add({ chave, valor });
+      }
+      toast.success('Perfil atualizado!');
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao atualizar perfil');
     }
   };
 
@@ -230,14 +247,44 @@ const Settings: React.FC = () => {
         <p className="text-xs text-gray-700 dark:text-gray-300 mb-4">Esses dados auxiliam no cálculo de queima de calorias estimadas por treino.</p>
         
         <div className="space-y-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest">DATA DE NASCIMENTO</label>
-            <input
-              type="date"
-              value={dataNascimentoConfig}
-              onChange={(e) => updateDataNascimento(e.target.value)}
-              className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold text-sm"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest">Nascimento</label>
+              <input
+                type="date"
+                value={dataNascimentoConfig}
+                onChange={(e) => updateDataNascimento(e.target.value)}
+                className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold text-sm w-full"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest">Altura (cm)</label>
+              <input
+                type="number"
+                placeholder="Ex: 175"
+                value={alturaConfig}
+                onChange={(e) => updateConfigValue('altura_cm', e.target.value)}
+                className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 focus:border-primary outline-none transition-all font-bold text-sm w-full"
+              />
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-1 mt-2">
+            <label className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest">Gênero Biológico</label>
+            <div className="flex gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-xl">
+              <button aria-label="Masculino"
+                onClick={() => updateConfigValue('genero', 'M')}
+                className={`flex-1 py-2 rounded-lg transition-all text-xs font-bold uppercase ${generoConfig === 'M' ? 'bg-white dark:bg-gray-600 shadow-sm text-primary' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+              >
+                Masculino
+              </button>
+              <button aria-label="Feminino"
+                onClick={() => updateConfigValue('genero', 'F')}
+                className={`flex-1 py-2 rounded-lg transition-all text-xs font-bold uppercase ${generoConfig === 'F' ? 'bg-white dark:bg-gray-600 shadow-sm text-primary' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+              >
+                Feminino
+              </button>
+            </div>
           </div>
         </div>
       </section>

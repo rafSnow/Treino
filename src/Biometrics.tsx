@@ -4,7 +4,7 @@ import { db, type Biometria } from './db';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera, ChevronLeft, ChevronRight, Layers, SlidersHorizontal, Target } from 'lucide-react';
+import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera, ChevronLeft, ChevronRight, Layers, SlidersHorizontal, Target, HeartPulse, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PhotoComparison from './PhotoComparison';
 
@@ -271,6 +271,53 @@ const Biometrics: React.FC = () => {
   const prevCarousel = () => setCarouselIndex(prev => prev === 0 ? carouselItems.length - 1 : prev - 1);
   const nextCarousel = () => setCarouselIndex(prev => prev === carouselItems.length - 1 ? 0 : prev + 1);
 
+  // Cálculos de IMC e TMB
+  const dataNascimento = getConfig('data_nascimento') as string | undefined;
+  const altura = parseFloat(getConfig('altura_cm') as string);
+  const genero = getConfig('genero') as 'M' | 'F' | undefined;
+
+  let idade = 0;
+  if (dataNascimento) {
+    const diff = Date.now() - new Date(dataNascimento).getTime();
+    idade = Math.abs(new Date(diff).getUTCFullYear() - 1970);
+  }
+
+  let imc = 0;
+  let tmb = 0;
+  let gorduraEstimada = 0;
+  const pesoAtual = ultimaMedicao?.peso;
+
+  if (pesoAtual && !isNaN(altura) && altura > 0) {
+    imc = pesoAtual / Math.pow(altura / 100, 2);
+  }
+
+  if (pesoAtual && !isNaN(altura) && altura > 0 && idade > 0 && genero) {
+    if (genero === 'M') {
+      tmb = (10 * pesoAtual) + (6.25 * altura) - (5 * idade) + 5;
+      gorduraEstimada = (1.20 * imc) + (0.23 * idade) - 10.8 - 5.4;
+    } else {
+      tmb = (10 * pesoAtual) + (6.25 * altura) - (5 * idade) - 161;
+      gorduraEstimada = (1.20 * imc) + (0.23 * idade) - 5.4;
+    }
+  }
+
+  const getIMCStatus = (imc: number) => {
+    if (imc < 18.5) return 'Baixo Peso';
+    if (imc < 25) return 'Saudável';
+    if (imc < 30) return 'Sobrepeso';
+    if (imc < 35) return 'Obesidade I';
+    if (imc < 40) return 'Obesidade II';
+    return 'Obesidade III';
+  };
+
+  const getIMCColor = (imc: number) => {
+    if (imc < 18.5) return '#f59e0b'; // amber
+    if (imc < 25) return '#10b981'; // emerald
+    if (imc < 30) return '#f97316'; // orange
+    if (imc < 35) return '#ef4444'; // red
+    return '#b91c1c'; // dark red
+  };
+
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
       <div className="flex items-center justify-between">
@@ -341,6 +388,48 @@ const Biometrics: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Dashboard Saúde e Metabolismo */}
+      {(!altura || !genero || !dataNascimento) ? (
+        <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+          <HeartPulse className="text-orange-500 mb-2" size={32} />
+          <h3 className="font-bold text-orange-700 dark:text-orange-500 mb-1">Saúde e Metabolismo</h3>
+          <p className="text-xs text-orange-600/80 dark:text-orange-400/80 mb-2 max-w-xs">Complete seu perfil (Altura, Gênero e Nascimento) em Ajustes para desbloquear seu IMC e Taxa Metabólica Basal.</p>
+        </div>
+      ) : pesoAtual ? (
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-4">
+            <HeartPulse className="text-primary" size={20} />
+            <h3 className="font-bold text-lg">Saúde e Metabolismo</h3>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl flex flex-col items-center text-center border-t-4" style={{ borderColor: getIMCColor(imc) }}>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">IMC</span>
+              <span className="text-2xl font-black">{imc.toFixed(1)}</span>
+              <span className="text-[10px] font-bold uppercase mt-1 px-2 py-0.5 rounded-full" style={{ backgroundColor: `${getIMCColor(imc)}20`, color: getIMCColor(imc) }}>
+                {getIMCStatus(imc)}
+              </span>
+            </div>
+            
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl flex flex-col justify-center items-center text-center">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">TMB</span>
+              <span className="text-2xl font-black text-blue-500">{tmb.toFixed(0)} <span className="text-xs font-bold text-gray-400">kcal</span></span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase mt-1">Gasto em Repouso</span>
+            </div>
+          </div>
+          
+          {gorduraEstimada > 0 && !ultimaMedicao.percentual_gordura && (
+            <div className="mt-4 bg-orange-500/10 p-3 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                <Info size={16} />
+                <span className="text-xs font-bold">Gordura Estimada</span>
+              </div>
+              <span className="font-black text-orange-600 dark:text-orange-400">{gorduraEstimada.toFixed(1)}%</span>
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {/* Gráfico de Evolução */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
