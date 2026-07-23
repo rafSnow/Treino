@@ -17,6 +17,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
 
 import RoutineImporter from './RoutineImporter'
+import ReloadPrompt from './ReloadPrompt'
 
 type Tab = 'catalog' | 'workout' | 'history' | 'biometrics' | 'cardio' | 'settings'
 
@@ -197,6 +198,7 @@ function App() {
       />
       {renderAppContent()}
       <RoutineImporter />
+      <ReloadPrompt />
     </ConfirmProvider>
   )
 }
