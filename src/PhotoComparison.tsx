@@ -12,12 +12,18 @@ const PhotoComparison: React.FC<Props> = ({ medicoes, onClose }) => {
   const fotosComData = useMemo(() => {
     const list: { data: Date, url: string, label: string }[] = [];
     medicoes.forEach(m => {
+      const dateStr = format(new Date(m.data), 'dd/MM/yyyy');
+      
+      if (m.foto_frente) list.push({ data: m.data, url: m.foto_frente, label: `${dateStr} (Frente)` });
+      if (m.foto_lado) list.push({ data: m.data, url: m.foto_lado, label: `${dateStr} (Lado)` });
+      if (m.foto_costas) list.push({ data: m.data, url: m.foto_costas, label: `${dateStr} (Costas)` });
+      
       if (m.fotos && m.fotos.length > 0) {
         m.fotos.forEach((url, index) => {
            list.push({ 
              data: m.data, 
              url, 
-             label: `${format(new Date(m.data), 'dd/MM/yyyy')} ${m.fotos!.length > 1 ? `(Foto ${index+1})` : ''}` 
+             label: `${dateStr} ${m.fotos!.length > 1 ? `(Outra ${index+1})` : '(Outra)'}` 
            });
         });
       }

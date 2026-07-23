@@ -17,6 +17,9 @@ const Biometrics: React.FC = () => {
   // Form State
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [fotos, setFotos] = useState<string[]>([]);
+  const [fotoFrente, setFotoFrente] = useState<string | undefined>(undefined);
+  const [fotoLado, setFotoLado] = useState<string | undefined>(undefined);
+  const [fotoCostas, setFotoCostas] = useState<string | undefined>(undefined);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   
   // Form Tab State
@@ -66,6 +69,35 @@ const Biometrics: React.FC = () => {
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleSpecificPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, tipo: 'frente' | 'lado' | 'costas') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        let scaleSize = 1;
+        if (img.width > MAX_WIDTH) {
+          scaleSize = MAX_WIDTH / img.width;
+        }
+        canvas.width = img.width * scaleSize;
+        canvas.height = img.height * scaleSize;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        
+        if (tipo === 'frente') setFotoFrente(dataUrl);
+        else if (tipo === 'lado') setFotoLado(dataUrl);
+        else if (tipo === 'costas') setFotoCostas(dataUrl);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const removePhoto = (index: number) => {
@@ -123,7 +155,10 @@ const Biometrics: React.FC = () => {
         perna_d: parseField('coxa_medial_d'),
         perna_e: parseField('coxa_medial_e'),
 
-        fotos: fotos.length > 0 ? fotos : undefined
+        fotos: fotos.length > 0 ? fotos : undefined,
+        foto_frente: fotoFrente,
+        foto_lado: fotoLado,
+        foto_costas: fotoCostas
       };
 
       await db.biometria.add(nova);
@@ -139,6 +174,9 @@ const Biometrics: React.FC = () => {
   const resetForm = () => {
     setFormData({});
     setFotos([]);
+    setFotoFrente(undefined);
+    setFotoLado(undefined);
+    setFotoCostas(undefined);
     setActiveTab('basico');
   };
 
@@ -338,15 +376,16 @@ const Biometrics: React.FC = () => {
               {m.panturrilha_d && <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Panturrilha D.: <strong className="text-gray-700 dark:text-gray-300">{m.panturrilha_d}cm</strong></span>}
             </div>
 
-            {m.fotos && m.fotos.length > 0 && (
+            {/* Exibe todas as fotos de forma unificada no histórico */}
+            {((m.fotos && m.fotos.length > 0) || m.foto_frente || m.foto_lado || m.foto_costas) && (
               <div className="flex gap-2 overflow-x-auto pt-2 pb-1 scrollbar-hide">
-                {m.fotos.map((foto, idx) => (
+                {[m.foto_frente, m.foto_lado, m.foto_costas, ...(m.fotos || [])].filter(Boolean).map((foto, idx) => (
                   <img 
                     key={idx}
-                    src={foto} 
+                    src={foto!} 
                     alt={`Progresso ${idx+1}`} 
-                    onClick={() => setFullScreenImage(foto)}
-                    className="h-20 w-20 object-cover rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setFullScreenImage(foto!)}
+                    className="h-20 w-20 object-cover rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
                   />
                 ))}
               </div>
@@ -368,24 +407,28 @@ const Biometrics: React.FC = () => {
         <PhotoComparison medicoes={medicoes} onClose={() => setIsComparing(false)} />
       )}
 
-      {/* Modal de Formulário Completo */}
+      {/* Modal de Formulário Completo (Bottom Sheet Full Width) */}
       {isFormOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-[100] p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-6 pb-10 sm:pb-6 shadow-xl animate-in slide-in-from-bottom duration-300 mt-20 sm:my-auto max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-gray-800 z-10 py-2 border-b border-gray-100 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-800 w-full h-[95vh] sm:h-[90vh] sm:max-w-2xl sm:mx-auto sm:rounded-t-3xl rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300 shadow-2xl overflow-hidden">
+            
+            {/* Header Fixo */}
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-800 z-10">
               <h2 className="text-xl font-bold">Nova Medição</h2>
-              <button aria-label="Fechar Formulário" onClick={() => setIsFormOpen(false)}><X size={24}/></button>
+              <button aria-label="Fechar Formulário" onClick={() => setIsFormOpen(false)} className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"><X size={20}/></button>
             </div>
             
-            {/* Navegação por Abas */}
-            <div className="flex overflow-x-auto gap-2 mb-6 scrollbar-hide pb-2">
-              <button type="button" onClick={() => setActiveTab('basico')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'basico' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Básico</button>
-              <button type="button" onClick={() => setActiveTab('perimetria')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'perimetria' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Perimetria</button>
-              <button type="button" onClick={() => setActiveTab('dobras')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'dobras' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Dobras Cutâneas</button>
-              <button type="button" onClick={() => setActiveTab('fotos')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'fotos' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Fotos</button>
-            </div>
+            {/* Corpo Rolável */}
+            <div className="flex-1 overflow-y-auto p-5 pb-32">
+              {/* Navegação por Abas */}
+              <div className="flex overflow-x-auto gap-2 mb-6 scrollbar-hide pb-2">
+                <button type="button" onClick={() => setActiveTab('basico')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'basico' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Básico</button>
+                <button type="button" onClick={() => setActiveTab('perimetria')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'perimetria' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Perimetria</button>
+                <button type="button" onClick={() => setActiveTab('dobras')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'dobras' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Dobras Cutâneas</button>
+                <button type="button" onClick={() => setActiveTab('fotos')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeTab === 'fotos' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>Fotos</button>
+              </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+              <form id="biometria-form" onSubmit={handleSubmit} className="space-y-6">
               
               {/* ABA BÁSICO */}
               <div className={activeTab === 'basico' ? 'block' : 'hidden'}>
@@ -497,33 +540,90 @@ const Biometrics: React.FC = () => {
 
               {/* ABA FOTOS */}
               <div className={activeTab === 'fotos' ? 'block' : 'hidden'}>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-2 mt-2">Fotos de Progresso</label>
-                <div className="flex flex-wrap gap-2">
-                  {fotos.map((foto, idx) => (
-                    <div key={idx} className="relative">
-                      <img src={foto} alt={`Preview ${idx}`} className="w-20 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700" />
-                      <button aria-label="Remover Foto" type="button" onClick={() => removePhoto(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md">
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
+                <p className="text-xs text-gray-500 mb-4 border-b pb-2 dark:border-gray-700">Adicione fotos padronizadas para facilitar a comparação visual da sua evolução.</p>
+                
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {/* Frente */}
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded w-full text-center truncate">Frente</span>
+                    {fotoFrente ? (
+                      <div className="relative w-full aspect-[3/4]">
+                        <img src={fotoFrente} alt="Frente" className="w-full h-full object-cover rounded-xl border-2 border-primary cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setFullScreenImage(fotoFrente)}/>
+                        <button type="button" onClick={() => setFotoFrente(undefined)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:scale-110 transition-transform"><X size={14}/></button>
+                      </div>
+                    ) : (
+                      <label className="w-full aspect-[3/4] flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900 group">
+                        <Camera size={24} className="mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-bold uppercase text-center px-1">Adicionar</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={e => handleSpecificPhotoUpload(e, 'frente')} />
+                      </label>
+                    )}
+                  </div>
                   
-                  <label className="w-20 h-20 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900">
-                    <Camera size={24} className="mb-1" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Adicionar</span>
-                    <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} />
-                  </label>
+                  {/* Lado */}
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded w-full text-center truncate">Lado</span>
+                    {fotoLado ? (
+                      <div className="relative w-full aspect-[3/4]">
+                        <img src={fotoLado} alt="Lado" className="w-full h-full object-cover rounded-xl border-2 border-primary cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setFullScreenImage(fotoLado)}/>
+                        <button type="button" onClick={() => setFotoLado(undefined)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:scale-110 transition-transform"><X size={14}/></button>
+                      </div>
+                    ) : (
+                      <label className="w-full aspect-[3/4] flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900 group">
+                        <Camera size={24} className="mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-bold uppercase text-center px-1">Adicionar</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={e => handleSpecificPhotoUpload(e, 'lado')} />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Costas */}
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded w-full text-center truncate">Costas</span>
+                    {fotoCostas ? (
+                      <div className="relative w-full aspect-[3/4]">
+                        <img src={fotoCostas} alt="Costas" className="w-full h-full object-cover rounded-xl border-2 border-primary cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setFullScreenImage(fotoCostas)}/>
+                        <button type="button" onClick={() => setFotoCostas(undefined)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:scale-110 transition-transform"><X size={14}/></button>
+                      </div>
+                    ) : (
+                      <label className="w-full aspect-[3/4] flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900 group">
+                        <Camera size={24} className="mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-bold uppercase text-center px-1">Adicionar</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={e => handleSpecificPhotoUpload(e, 'costas')} />
+                      </label>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-4 italic">Fotos são armazenadas localmente no seu dispositivo.</p>
+
+                <div className="border-t border-gray-200 dark:border-gray-800 pt-4">
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest mb-3">Outras Fotos (Opcional)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {fotos.map((foto, idx) => (
+                      <div key={idx} className="relative">
+                        <img src={foto} alt={`Preview ${idx}`} className="w-16 h-16 object-cover rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer" onClick={() => setFullScreenImage(foto)}/>
+                        <button aria-label="Remover Foto" type="button" onClick={() => removePhoto(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md">
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                    <label className="w-16 h-16 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900">
+                      <Plus size={20} />
+                      <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} />
+                    </label>
+                  </div>
+                </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800 pb-2">
-                <button type="submit" className="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all">
-                  <Save size={20} />
-                  SALVAR MEDIÇÕES
-                </button>
-              </div>
             </form>
+            </div> {/* Fim do Corpo Rolável */}
+            
+            {/* Botão Fixo no Rodapé */}
+            <div className="absolute bottom-0 left-0 right-0 p-5 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe">
+              <button form="biometria-form" type="submit" className="w-full bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all active:scale-95">
+                <Save size={20} />
+                SALVAR MEDIÇÕES
+              </button>
+            </div>
           </div>
         </div>
       )}

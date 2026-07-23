@@ -116,6 +116,9 @@ export interface Biometria {
 
   notas?: string;
   fotos?: string[];
+  foto_frente?: string;
+  foto_lado?: string;
+  foto_costas?: string;
 }
 
 export interface PersonalRecord {
