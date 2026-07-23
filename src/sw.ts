@@ -9,6 +9,10 @@ let timerId: ReturnType<typeof setTimeout> | null = null;
 let timerResolve: (() => void) | null = null;
 
 self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+
   if (event.data && event.data.type === 'START_REST_TIMER') {
     const { delay, title, body } = event.data;
     
