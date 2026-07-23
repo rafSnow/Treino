@@ -1,5 +1,5 @@
+import { useCollection } from './db';
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Biometria } from './db';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format } from 'date-fns';
@@ -27,8 +27,8 @@ const Biometrics: React.FC = () => {
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [goalValue, setGoalValue] = useState<string>('');
 
-  const medicoes = useLiveQuery(() => db.biometria.orderBy('data').toArray()) || [];
-  const configuracoes = useLiveQuery(() => db.configuracoes.toArray()) || [];
+  const medicoes = useCollection<any>('biometria', 'data') || [];
+  const configuracoes = useCollection<any>('configuracoes') || [];
 
   const updateForm = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -170,7 +170,7 @@ const Biometrics: React.FC = () => {
     setFotoCostas(undefined);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if(confirm('Tem certeza que deseja excluir esta medição?')) {
       try {
         await db.biometria.delete(id);

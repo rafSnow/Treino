@@ -18,9 +18,9 @@ const Progress: React.FC = () => {
     if (!selectedExerciseId || !sessoes) return [];
 
     return sessoes
-      .filter(s => s.exercicios_realizados.some(ex => ex.exercicio_id === selectedExerciseId))
+      .filter(s => s.exercicios_realizados.some(ex => String(ex.exercicio_id) === String(selectedExerciseId)))
       .map(s => {
-        const exRealizado = s.exercicios_realizados.find(ex => ex.exercicio_id === selectedExerciseId);
+        const exRealizado = s.exercicios_realizados.find(ex => String(ex.exercicio_id) === String(selectedExerciseId));
         const maxCarga = Math.max(...(exRealizado?.series.filter(ser => ser.concluida).map(ser => ser.carga || 0) || [0]));
         
         return {
@@ -32,7 +32,7 @@ const Progress: React.FC = () => {
       .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
   }, [selectedExerciseId, sessoes]);
 
-  const currentEx = exercicios.find(e => e.id === selectedExerciseId);
+  const currentEx = exercicios.find(e => String(e.id) === String(selectedExerciseId));
 
   return (
     <div className="space-y-6 pb-10">

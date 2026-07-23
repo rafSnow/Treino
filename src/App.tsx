@@ -12,9 +12,7 @@ import Cardio from './Cardio'
 import { useWorkoutStore } from './store'
 import { ConfirmProvider } from './ConfirmDialog'
 import { Toaster } from 'react-hot-toast'
-import SplashScreen from './SplashScreen'
-import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from './db'
+
 
 import RoutineImporter from './RoutineImporter'
 import ReloadPrompt from './ReloadPrompt'
@@ -50,11 +48,7 @@ function App() {
 
 
   // 5.2 Sem Estado de Loading no Startup
-  const isLoaded = useLiveQuery(async () => {
-    const count = await db.exercicios.count();
-    // Apenas para garantir que o Dexie inicializou e respondeu
-    return count >= 0;
-  });
+  
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -65,9 +59,7 @@ function App() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, [setInstallPrompt]);
 
-  if (isLoaded === undefined) {
-    return <SplashScreen />;
-  }
+  
 
   const renderTabContent = () => {
     switch (activeTab) {

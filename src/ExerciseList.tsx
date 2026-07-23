@@ -19,16 +19,15 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
 
   const exercicios = useLiveQuery(
     async () => {
-      let collection = db.exercicios.orderBy('nome');
+      let results = await db.exercicios.toArray();
+      results.sort((a,b) => a.nome.localeCompare(b.nome));
       
       if (searchTerm) {
-        collection = collection.filter(ex => 
+        results = results.filter(ex => 
           ex.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
           ex.categoria.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
-
-      let results = await collection.toArray();
       
       if (selectedTag) {
         results = results.filter(ex => ex.tags.includes(selectedTag));
@@ -45,13 +44,9 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
 
   const handleDelete = async (id: number, nome: string) => {
     // 3.4 Deleção sem Verificação de Integridade Referencial
-    const rotinasUsando = await db.rotinas
-      .filter(r => r.exercicios.some(e => e.exercicio_id === id))
-      .count();
+    const rotinasUsando = (await db.rotinas.toArray()).filter(r => r.exercicios.some(e => e.exercicio_id === String(id))).length;
 
-    const sessoesUsando = await db.sessoes
-      .filter(s => s.exercicios_realizados.some(e => e.exercicio_id === id))
-      .count();
+    const sessoesUsando = (await db.sessoes.toArray()).filter(s => s.exercicios_realizados.some(e => e.exercicio_id === String(id))).length;
 
     if (rotinasUsando > 0 || sessoesUsando > 0) {
       await confirm({
@@ -70,7 +65,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
       variant: 'danger'
     })) {
       try {
-        await db.exercicios.delete(id);
+        await db.exercicios.delete(String(id));
       } catch (error) {
         console.error('Falha ao excluir exercício:', error);
         alert('Erro ao excluir exercício.');
@@ -88,8 +83,8 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
     setIsFormOpen(true);
   };
 
-  const tagsDisponiveis = Array.from(new Set(exercicios?.flatMap(ex => ex.tags) || []));
-  const categoriasDisponiveis = Array.from(new Set(exercicios?.map(ex => ex.categoria) || []));
+  const tagsDisponiveis = Array.from(new Set(exercicios?.flatMap(ex => ex.tags) || [])) as string[];
+  const categoriasDisponiveis = Array.from(new Set(exercicios?.map(ex => ex.categoria) || [])) as string[];
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-[#1a1a1a] p-4 space-y-6 overflow-y-auto pb-24">
@@ -211,7 +206,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ onBack }) => {
                   <Edit2 size={18} />
                 </button>
                 <button aria-label="Botão" 
-                  onClick={() => ex.id && handleDelete(ex.id, ex.nome)}
+                  onClick={() => ex.id && handleDelete(ex.id as any, ex.nome)}
                   className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors"
                 >
                   <Trash2 size={18} />

@@ -1,7 +1,7 @@
+import { useCollection } from './db';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useWorkoutStore } from './store';
 import { db, type Exercicio } from './db';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { Clock, ChevronRight, ChevronLeft, XCircle, TrendingUp } from 'lucide-react';
 import { useConfirm } from './ConfirmDialog';
 import ExerciseHelpModal from './ExerciseHelpModal';
@@ -11,10 +11,10 @@ import EndWorkoutModal from './components/EndWorkoutModal';
 const WorkoutSession: React.FC = () => {
   const { activeWorkout, restTimer, isTimerActive, tickTimer, finishWorkout, stopTimer } = useWorkoutStore();
   const [helpExercise, setHelpExercise] = useState<Exercicio | null>(null);
-  const todosExercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
-  const sessoesPassadas = useLiveQuery(() => db.sessoes.orderBy('data_inicio').reverse().toArray()) || [];
-  const biometrias = useLiveQuery(() => db.biometria.orderBy('data').reverse().toArray()) || [];
-  const configuracoes = useLiveQuery(() => db.configuracoes.toArray()) || [];
+  const todosExercicios = useCollection<any>('exercicios') || [];
+  const sessoesPassadas = useCollection<any>('sessoes', 'data_inicio', true) || [];
+  const biometrias = useCollection<any>('biometria', 'data', true) || [];
+  const configuracoes = useCollection<any>('configuracoes') || [];
   const confirm = useConfirm();
 
   const [isEndModalOpen, setIsEndModalOpen] = useState(false);

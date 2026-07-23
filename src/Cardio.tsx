@@ -1,5 +1,5 @@
+import { useCollection } from './db';
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type SessaoCardio } from './db';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, startOfMonth } from 'date-fns';
@@ -20,7 +20,7 @@ const Cardio: React.FC = () => {
   const [bpm, setBpm] = useState('');
   const [notas, setNotas] = useState('');
 
-  const sessoes = useLiveQuery(() => db.cardio.orderBy('data').toArray()) || [];
+  const sessoes = useCollection<any>('cardio', 'data') || [];
 
   const getPace = (duracaoMinutos: number, distanciaKm: number) => {
     if (!duracaoMinutos || !distanciaKm) return null;
@@ -75,7 +75,7 @@ const Cardio: React.FC = () => {
     setNotas('');
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if(confirm('Tem certeza que deseja excluir este registro de cardio?')) {
       try {
         await db.cardio.delete(id);

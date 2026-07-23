@@ -1,8 +1,7 @@
-import React, { useRef, useState } from 'react';
-import { db } from './db';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { exportDB, importDB } from 'dexie-export-import';
-import { Download, Upload, Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info, Smartphone, Calendar, Bell, Volume2, Vibrate, Moon, Sun, Monitor, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { db, useCollection } from './db';
+
+import { Trash2, ShieldCheck, AlertTriangle, ExternalLink, Info, Smartphone, Calendar, Bell, Volume2, Vibrate, Moon, Sun, Monitor, User } from 'lucide-react';
 import { useWorkoutStore } from './store';
 import { useConfirm } from './ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -12,15 +11,12 @@ const DAYS_OF_WEEK = [
 ];
 
 const Settings: React.FC = () => {
-  const [isExporting, setIsExporting] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { installPrompt, installApp, theme, setTheme } = useWorkoutStore();
+    const { installPrompt, installApp, theme, setTheme } = useWorkoutStore();
   const confirm = useConfirm();
 
-  const rotinas = useLiveQuery(() => db.rotinas.toArray()) || [];
-  const planoSemanal = useLiveQuery(() => db.plano_semanal.toArray()) || [];
-  const configuracoes = useLiveQuery(() => db.configuracoes.toArray()) || [];
+  const rotinas = useCollection<any>('rotinas') || [];
+  const planoSemanal = useCollection<any>('plano_semanal') || [];
+  const configuracoes = useCollection<any>('configuracoes') || [];
 
   const somEnabled = configuracoes.find(c => c.chave === 'som')?.valor !== false;
   const vibracaoEnabled = configuracoes.find(c => c.chave === 'vibracao')?.valor !== false;
@@ -95,9 +91,9 @@ const Settings: React.FC = () => {
   const updatePlano = async (dia: number, rotinaId: string) => {
     try {
       if (rotinaId === '') {
-        await db.plano_semanal.delete(dia);
+        await db.plano_semanal.delete(String(dia));
       } else {
-        await db.plano_semanal.put({ dia_semana: dia, rotina_id: Number(rotinaId) });
+        await db.plano_semanal.put({ dia_semana: dia, rotina_id: String(rotinaId) });
       }
       toast.success('Plano atualizado!');
     } catch (error) {
@@ -106,68 +102,18 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleExport = async () => {
-    try {
-      setIsExporting(true);
-      const blob = await exportDB(db);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `backup_treino_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('Backup exportado com sucesso!');
-    } catch (error) {
-      console.error('Export failed:', error);
-      toast.error('Erro ao exportar dados.');
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!(await confirm({
-      title: 'Importar Backup',
-      message: 'Ao importar, todos os dados atuais serão substituídos pelos dados do arquivo de backup. Deseja continuar?',
-      confirmLabel: 'Sim, Importar',
-      variant: 'danger'
-    }))) {
-      return;
-    }
-
-    try {
-      setIsImporting(true);
-      await db.delete();
-      await db.open();
-      await importDB(file);
-      toast.success('Dados importados com sucesso! Recarregando...');
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
-      console.error('Import failed:', error);
-      toast.error('Erro ao importar dados. Verifique se o arquivo é um backup válido.');
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
   const handleClearData = async () => {
     if (await confirm({
       title: 'Apagar tudo',
-      message: 'TEM CERTEZA? Isso apagará permanentemente todos os seus exercícios, rotinas e histórico. Esta ação não pode ser desfeita.',
+      message: 'TEM CERTEZA? Isso apagará permanentemente todos os seus dados. Esta ação não pode ser desfeita.',
       confirmLabel: 'Sim, Apagar Tudo',
       variant: 'danger'
     })) {
-      await db.delete();
-      toast.success('Todos os dados foram apagados. Recarregando...');
-      setTimeout(() => window.location.reload(), 1500);
+      await db.exercicios.clear();
+      await db.rotinas.clear();
+      await db.sessoes.clear();
+      await db.biometria.clear();
+      toast.success('Todos os dados foram apagados.');
     }
   };
 
@@ -191,7 +137,7 @@ const Settings: React.FC = () => {
                 <span className="text-sm font-bold w-20">{day}</span>
                 <select
                   value={plano?.rotina_id || ''}
-                  onChange={(e) => updatePlano(index, e.target.value)}
+                  onChange={(e) => updatePlano(index, String(e.target.value))}
                   className="flex-1 p-2 rounded-lg bg-gray-50 dark:bg-gray-700 border-none text-xs font-bold outline-none focus:ring-1 focus:ring-primary transition-all"
                 >
                   <option value="">Descanso / Livre</option>
@@ -370,7 +316,7 @@ const Settings: React.FC = () => {
 
         <div className="space-y-3">
           {installPrompt && (
-            <button aria-label="Botão de Ação"               onClick={installApp}
+            <button aria-label="Botão de Ação" onClick={installApp}
               className="w-full flex items-center justify-between p-4 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20 group"
             >
               <div className="flex items-center gap-3">
@@ -382,40 +328,6 @@ const Settings: React.FC = () => {
               </div>
             </button>
           )}
-
-          <button aria-label="Botão de Ação"             onClick={handleExport}
-            disabled={isExporting}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-primary/5 transition-colors group"
-          >
-            <div className="flex items-center gap-3">
-              <Download size={20} className="text-gray-600 dark:text-gray-400 group-hover:text-primary" />
-              <div className="text-left">
-                <div className="font-bold text-sm">Exportar Backup</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 uppercase">Salvar arquivo .json</div>
-              </div>
-            </div>
-            {isExporting && <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
-          </button>
-
-          <button aria-label="Botão de Ação"             onClick={handleImportClick}
-            disabled={isImporting}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-primary/5 transition-colors group"
-          >
-            <div className="flex items-center gap-3">
-              <Upload size={20} className="text-gray-600 dark:text-gray-400 group-hover:text-primary" />
-              <div className="text-left">
-                <div className="font-bold text-sm">Importar Backup</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 uppercase">Restaurar de um arquivo</div>
-              </div>
-            </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImport}
-              accept=".json"
-              className="hidden"
-            />
-          </button>
         </div>
       </section>
 

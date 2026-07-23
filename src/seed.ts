@@ -122,9 +122,9 @@ export const seedDatabase = async () => {
 
   // Remove duplicatas
   const uniqueExercises = Array.from(new Map(rawExercises.map(item => [item.nome, item])).values());
-  const exerciseIds = new Map<string, number>();
+  const exerciseIds = new Map<string, string>();
 
-  await db.transaction('rw', db.exercicios, db.rotinas, async () => {
+  await db.transaction('rw', null, async () => {
     for (const ex of uniqueExercises) {
       const id = await db.exercicios.add({
         nome: ex.nome,
@@ -133,7 +133,7 @@ export const seedDatabase = async () => {
         tags: [ex.cat],
         ajuda: ex.note
       });
-      exerciseIds.set(ex.nome, id);
+      exerciseIds.set(ex.nome, id as string);
     }
 
     for (const ex of uniqueExercises) {

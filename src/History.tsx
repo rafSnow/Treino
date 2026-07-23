@@ -1,6 +1,6 @@
+import { useCollection } from './db';
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type SessaoTreino } from './db';
+import { type SessaoTreino } from './db';
 import { format, isSameDay, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon, TrendingUp, History as HistoryIcon, Search, Share2 } from 'lucide-react';
@@ -12,11 +12,11 @@ const History: React.FC = () => {
   const [filterText, setFilterText] = useState('');
   const [shareSessao, setShareSessao] = useState<SessaoTreino | null>(null);
 
-  const sessoes = useLiveQuery(() => db.sessoes.orderBy('data_inicio').reverse().toArray());
-  const rotinas = useLiveQuery(() => db.rotinas.toArray()) || [];
-  const exercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
+  const sessoes = useCollection<any>('sessoes', 'data_inicio', true);
+  const rotinas = useCollection<any>('rotinas') || [];
+  const exercicios = useCollection<any>('exercicios') || [];
 
-  const getRoutineName = (id?: number) => rotinas.find(r => r.id === id)?.nome || 'Treino Avulso';
+  const getRoutineName = (id?: string) => rotinas.find(r => r.id === id)?.nome || 'Treino Avulso';
 
   const filteredSessoes = sessoes?.filter(s => {
     if (!filterText) return true;

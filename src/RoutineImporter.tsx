@@ -43,9 +43,10 @@ const RoutineImporter: React.FC = () => {
         for (const item of importData.e) {
           const exData = item.ex;
           // Verifica se o exercício já existe pelo nome
-          const existingEx = await db.exercicios.where('nome').equalsIgnoreCase(exData.n).first();
+          const allEx = await db.exercicios.toArray();
+          const existingEx = allEx.find(e => e.nome.toLowerCase() === exData.n.toLowerCase());
           
-          let exerciseId: number;
+          let exerciseId: string;
           if (!existingEx) {
             // Cria o exercício se não existir
             exerciseId = await db.exercicios.add({
@@ -55,7 +56,7 @@ const RoutineImporter: React.FC = () => {
               tags: exData.g || [],
               ajuda: exData.a,
               video_url: exData.v
-            }) as number;
+            });
           } else {
             exerciseId = existingEx.id!;
           }

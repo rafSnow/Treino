@@ -41,8 +41,9 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
 
   const handleShare = async (routine: Rotina) => {
     try {
-      const exerciseIds = routine.exercicios.map(e => e.exercicio_id);
-      const exercises = await db.exercicios.where('id').anyOf(exerciseIds).toArray();
+      const exerciseIds = routine.exercicios.map(e => String(e.exercicio_id));
+      const allEx = await db.exercicios.toArray();
+      const exercises = allEx.filter(e => exerciseIds.includes(String(e.id)));
       
       const payload = {
         n: routine.nome,
@@ -95,7 +96,7 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
     }
   };
 
-  const handleDelete = async (id: number, nome: string) => {
+  const handleDelete = async (id: string, nome: string) => {
     if (await confirm({
       title: 'Excluir Rotina',
       message: `Tem certeza que deseja excluir a rotina "${nome}"?`,
@@ -103,7 +104,7 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
       variant: 'danger'
     })) {
       try {
-        await db.rotinas.delete(id);
+        await db.rotinas.delete(String(id));
       } catch (error) {
         console.error('Falha ao excluir rotina:', error);
         toast.error('Erro ao excluir rotina.');
@@ -196,7 +197,7 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
                       <Edit2 size={18} />
                     </button>
                     <button aria-label="Botão" 
-                      onClick={() => routine.id && handleDelete(routine.id, routine.nome)}
+                      onClick={() => routine.id && handleDelete(String(routine.id), routine.nome)}
                       className="p-2 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded-xl transition-colors"
                       title="Excluir Rotina"
                     >

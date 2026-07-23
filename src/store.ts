@@ -9,7 +9,7 @@ interface ActiveWorkout {
   data_inicio: Date;
   notas?: string;
   exercicios_realizados: {
-    exercicio_id: number;
+    exercicio_id: string;
     notas?: string;
     series: Serie[];
   }[];
@@ -34,9 +34,9 @@ interface WorkoutStore {
   
   startWorkout: (rotina: Rotina) => void;
   finishWorkout: (meta?: { duracao_minutos?: number, rpe_sessao?: number, calorias?: number, fc_media?: number }) => Promise<void>;
-  toggleSerie: (exercicio_id: number, serieIndex: number, data: Partial<Serie>) => void;
+  toggleSerie: (exercicio_id: string, serieIndex: number, data: Partial<Serie>) => void;
   setSessaoNotas: (notas: string) => void;
-  setExercicioNotas: (exercicio_id: number, notas: string) => void;
+  setExercicioNotas: (exercicio_id: string, notas: string) => void;
   
   // Timer actions
   startTimer: (seconds: number) => void;
@@ -47,7 +47,7 @@ interface WorkoutStore {
   setInstallPrompt: (prompt: BeforeInstallPromptEvent | null) => void;
   installApp: () => void;
 
-  checkAndRecordPR: (exercicio_id: number, carga: number, reps: number) => Promise<void>;
+  checkAndRecordPR: (exercicio_id: string, carga: number, reps: number) => Promise<void>;
 }
 
 export const useWorkoutStore = create<WorkoutStore>()(
@@ -145,7 +145,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
         }
       },
 
-      setExercicioNotas: (exercicio_id: number, notas: string) => {
+      setExercicioNotas: (exercicio_id: string, notas: string) => {
         const { activeWorkout } = get();
         if (!activeWorkout) return;
         const newExercicios = activeWorkout.exercicios_realizados.map(ex => 
@@ -205,7 +205,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
         }
       },
 
-      toggleSerie: (exercicio_id: number, serieIndex: number, data: Partial<Serie>) => {
+      toggleSerie: (exercicio_id: string, serieIndex: number, data: Partial<Serie>) => {
         const { activeWorkout } = get();
         if (!activeWorkout) return;
 

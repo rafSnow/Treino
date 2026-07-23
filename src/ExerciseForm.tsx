@@ -1,3 +1,4 @@
+import { useCollection } from './db';
 import React, { useState } from 'react';
 import { db, type Exercicio } from './db';
 import { X, Save, RefreshCw, Search } from 'lucide-react';
@@ -23,18 +24,18 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ exerciseToEdit, onClose }) 
   const [tipo, setTipo] = useState<'carga' | 'tempo'>(() => exerciseToEdit?.tipo ?? 'carga');
   const [ajuda, setAjuda] = useState(() => exerciseToEdit?.ajuda ?? '');
   const [videoUrl, setVideoUrl] = useState(() => exerciseToEdit?.video_url ?? '');
-  const [sub1, setSub1] = useState<number | undefined>(() => exerciseToEdit?.substituicao1_id);
-  const [sub2, setSub2] = useState<number | undefined>(() => exerciseToEdit?.substituicao2_id);
+  const [sub1, setSub1] = useState<string | undefined>(() => exerciseToEdit?.substituicao1_id);
+  const [sub2, setSub2] = useState<string | undefined>(() => exerciseToEdit?.substituicao2_id);
   const [imagem, setImagem] = useState(() => exerciseToEdit?.imagem ?? '');
 
   const [searchSub1, setSearchSub1] = useState('');
   const [searchSub2, setSearchSub2] = useState('');
   const [focusedSub, setFocusedSub] = useState<1 | 2 | null>(null);
 
-  const todosExercicios = useLiveQuery(() => db.exercicios.toArray()) || [];
+  const todosExercicios = useCollection<any>('exercicios') || [];
   
   const prHistory = useLiveQuery(
-    () => exerciseToEdit?.id ? db.personal_records.where('exercicio_id').equals(exerciseToEdit.id).sortBy('data') : Promise.resolve([]),
+    () => exerciseToEdit?.id ? db.personal_records.where('exercicio_id').equals(exerciseToEdit.id).toArray().then(arr => arr.sort((a,b) => new Date(a.data).getTime() - new Date(b.data).getTime())) : Promise.resolve([]),
     [exerciseToEdit?.id]
   ) || [];
 
