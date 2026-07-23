@@ -4,13 +4,15 @@ import { db, type Biometria } from './db';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera, ChevronLeft, ChevronRight, Layers, SlidersHorizontal } from 'lucide-react';
 import toast from 'react-hot-toast';
+import PhotoComparison from './PhotoComparison';
 
 const Biometrics: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<'peso' | 'percentual_gordura' | 'massa_muscular'>('peso');
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [isComparing, setIsComparing] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState<Record<string, string>>({});
@@ -302,7 +304,17 @@ const Biometrics: React.FC = () => {
 
       {/* Histórico de Medições */}
       <div className="space-y-4">
-        <h3 className="font-bold text-lg px-1">Histórico e Fotos</h3>
+        <div className="flex items-center justify-between px-1">
+          <h3 className="font-bold text-lg">Histórico e Fotos</h3>
+          {medicoes.filter(m => m.fotos && m.fotos.length > 0).length >= 2 && (
+            <button 
+              onClick={() => setIsComparing(true)}
+              className="flex items-center gap-1.5 text-xs font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors"
+            >
+              <SlidersHorizontal size={14} /> COMPARAR
+            </button>
+          )}
+        </div>
         {medicoes.slice().reverse().map(m => (
           <div key={m.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
             <div className="flex justify-between items-start">
@@ -349,6 +361,11 @@ const Biometrics: React.FC = () => {
           <button aria-label="Fechar Imagem" className="absolute top-6 right-6 text-white p-2 bg-white/10 rounded-full"><X size={24}/></button>
           <img src={fullScreenImage} className="max-w-full max-h-[90vh] object-contain rounded-lg" alt="Progresso Fullscreen" />
         </div>
+      )}
+
+      {/* Modal de Comparação de Fotos */}
+      {isComparing && (
+        <PhotoComparison medicoes={medicoes} onClose={() => setIsComparing(false)} />
       )}
 
       {/* Modal de Formulário Completo */}
