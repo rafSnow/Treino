@@ -182,22 +182,79 @@ const Biometrics: React.FC = () => {
     }
   };
 
+  const getConfig = (chave: string) => configuracoes.find(c => c.chave === chave)?.valor;
+  const currentGoal = getConfig(`meta_${selectedMetric}`) as number | undefined;
+
+  const dataNascimento = getConfig('data_nascimento') as string | undefined;
+  const altura = parseFloat(getConfig('altura_cm') as string);
+  const genero = getConfig('genero') as 'M' | 'F' | undefined;
+
+  let idade = 0;
+  if (dataNascimento) {
+    const diff = Date.now() - new Date(dataNascimento).getTime();
+    idade = Math.abs(new Date(diff).getUTCFullYear() - 1970);
+  }
+
+  const getCalculatedMetrics = (m: Biometria) => {
+    let bf = m.percentual_gordura;
+    let mm = m.massa_muscular;
+    
+    if (!bf && m.peso && !isNaN(altura) && altura > 0 && idade > 0 && genero) {
+      const cintura = m.cintura;
+      const pescoco = m.pescoco;
+      const quadril = m.quadril;
+      
+      let bfNavy = 0;
+      if (genero === 'M' && cintura && pescoco) {
+        bfNavy = 495 / (1.0324 - 0.19077 * Math.log10(cintura - pescoco) + 0.15456 * Math.log10(altura)) - 450;
+      } else if (genero === 'F' && cintura && quadril && pescoco) {
+        bfNavy = 495 / (1.29579 - 0.35004 * Math.log10(cintura + quadril - pescoco) + 0.22100 * Math.log10(altura)) - 450;
+      }
+      
+      if (bfNavy > 0 && bfNavy < 60) {
+        bf = bfNavy;
+      } else {
+        const imcMedicao = m.peso / Math.pow(altura / 100, 2);
+        let bfBmi = 0;
+        if (genero === 'M') {
+          bfBmi = (1.20 * imcMedicao) + (0.23 * idade) - 10.8 - 5.4;
+        } else {
+          bfBmi = (1.20 * imcMedicao) + (0.23 * idade) - 5.4;
+        }
+        if (bfBmi > 0) bf = bfBmi;
+      }
+    }
+    
+    if (!mm && bf && m.peso) {
+      mm = m.peso * (1 - (bf / 100));
+    }
+    
+    return { 
+      bf: bf ? parseFloat(bf.toFixed(1)) : undefined, 
+      mm: mm ? parseFloat(mm.toFixed(1)) : undefined 
+    };
+  };
+
   const chartData = medicoes
-    .filter(m => m[selectedMetric] !== undefined)
-    .map(m => ({
-      data: format(new Date(m.data), 'dd/MM'),
-      valor: m[selectedMetric],
-      fullDate: format(new Date(m.data), 'PPP', { locale: ptBR })
-    }));
+    .map(m => {
+      const calc = getCalculatedMetrics(m);
+      let valor: number | undefined = m[selectedMetric];
+      if (selectedMetric === 'percentual_gordura' && valor === undefined) valor = calc.bf;
+      if (selectedMetric === 'massa_muscular' && valor === undefined) valor = calc.mm;
+      
+      return {
+        data: format(new Date(m.data), 'dd/MM'),
+        valor,
+        fullDate: format(new Date(m.data), 'PPP', { locale: ptBR })
+      };
+    })
+    .filter(m => m.valor !== undefined);
 
   const metricConfig = {
     peso: { label: 'Peso', color: '#00C896', unit: 'kg' },
     percentual_gordura: { label: '% Gordura', color: '#f97316', unit: '%' },
     massa_muscular: { label: 'Massa Muscular', color: '#ef4444', unit: 'kg' }
   };
-
-  const getConfig = (chave: string) => configuracoes.find(c => c.chave === chave)?.valor;
-  const currentGoal = getConfig(`meta_${selectedMetric}`) as number | undefined;
 
   const calculateProgress = (start: number, current: number, goal: number) => {
     if (start === goal) return 100;
@@ -247,6 +304,8 @@ const Biometrics: React.FC = () => {
         return { ...acc, ...Object.fromEntries(validEntries) };
       }, {} as Biometria)
     : undefined;
+    
+  const ultimaCalculada = ultimaMedicao ? getCalculatedMetrics(ultimaMedicao) : { bf: undefined, mm: undefined };
 
   // Configuração do carrossel do quadro resumo
   let carouselItems: { label: string, value: number, unit: string }[] = [];
@@ -278,19 +337,8 @@ const Biometrics: React.FC = () => {
   const nextCarousel = () => setCarouselIndex(prev => prev === carouselItems.length - 1 ? 0 : prev + 1);
 
   // Cálculos de IMC e TMB
-  const dataNascimento = getConfig('data_nascimento') as string | undefined;
-  const altura = parseFloat(getConfig('altura_cm') as string);
-  const genero = getConfig('genero') as 'M' | 'F' | undefined;
-
-  let idade = 0;
-  if (dataNascimento) {
-    const diff = Date.now() - new Date(dataNascimento).getTime();
-    idade = Math.abs(new Date(diff).getUTCFullYear() - 1970);
-  }
-
   let imc = 0;
   let tmb = 0;
-  let gorduraEstimada = 0;
   const pesoAtual = ultimaMedicao?.peso;
 
   if (pesoAtual && !isNaN(altura) && altura > 0) {
@@ -300,10 +348,8 @@ const Biometrics: React.FC = () => {
   if (pesoAtual && !isNaN(altura) && altura > 0 && idade > 0 && genero) {
     if (genero === 'M') {
       tmb = (10 * pesoAtual) + (6.25 * altura) - (5 * idade) + 5;
-      gorduraEstimada = (1.20 * imc) + (0.23 * idade) - 10.8 - 5.4;
     } else {
       tmb = (10 * pesoAtual) + (6.25 * altura) - (5 * idade) - 161;
-      gorduraEstimada = (1.20 * imc) + (0.23 * idade) - 5.4;
     }
   }
 
@@ -361,7 +407,10 @@ const Biometrics: React.FC = () => {
             </div>
             <div>
               <p className="text-xs uppercase font-bold text-gray-600 dark:text-gray-400">% Gordura</p>
-              <p className="text-xl font-bold leading-tight">{ultimaMedicao.percentual_gordura || '--'}<span className="text-xs ml-0.5">%</span></p>
+              <p className="text-xl font-bold leading-tight">
+                {ultimaCalculada.bf || '--'}
+                <span className="text-xs ml-0.5">%</span>
+              </p>
             </div>
           </button>
           
@@ -374,7 +423,10 @@ const Biometrics: React.FC = () => {
             </div>
             <div>
               <p className="text-xs uppercase font-bold text-gray-600 dark:text-gray-400">Massa Musc.</p>
-              <p className="text-xl font-bold leading-tight">{ultimaMedicao.massa_muscular || '--'}<span className="text-xs ml-0.5">kg</span></p>
+              <p className="text-xl font-bold leading-tight">
+                {ultimaCalculada.mm || '--'}
+                <span className="text-xs ml-0.5">kg</span>
+              </p>
             </div>
           </button>
           
@@ -424,16 +476,6 @@ const Biometrics: React.FC = () => {
               <span className="text-[10px] font-bold text-gray-400 uppercase mt-1">Gasto em Repouso</span>
             </div>
           </div>
-          
-          {gorduraEstimada > 0 && !ultimaMedicao.percentual_gordura && (
-            <div className="mt-4 bg-orange-500/10 p-3 rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
-                <Info size={16} />
-                <span className="text-xs font-bold">Gordura Estimada</span>
-              </div>
-              <span className="font-black text-orange-600 dark:text-orange-400">{gorduraEstimada.toFixed(1)}%</span>
-            </div>
-          )}
         </div>
       ) : null}
 
@@ -450,17 +492,21 @@ const Biometrics: React.FC = () => {
           </button>
         </div>
 
-        {currentGoal && chartData.length > 0 && ultimaMedicao && (
+        {currentGoal && chartData.length > 0 && ultimaCalculada && (
           <div className="mb-6 bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
             <div className="flex justify-between text-xs font-bold mb-2">
               <span className="text-gray-500 flex flex-col items-start"><span className="text-[9px] uppercase tracking-wider">Início</span> {chartData[0].valor}{metricConfig[selectedMetric].unit}</span>
-              <span className="text-primary flex flex-col items-center"><span className="text-[9px] uppercase tracking-wider">Atual</span> {ultimaMedicao[selectedMetric]}{metricConfig[selectedMetric].unit}</span>
+              <span className="text-primary flex flex-col items-center"><span className="text-[9px] uppercase tracking-wider">Atual</span> {
+                selectedMetric === 'peso' ? ultimaMedicao.peso :
+                selectedMetric === 'percentual_gordura' ? ultimaCalculada.bf :
+                selectedMetric === 'massa_muscular' ? ultimaCalculada.mm : '--'
+              }{metricConfig[selectedMetric].unit}</span>
               <span className="text-green-500 flex flex-col items-end"><span className="text-[9px] uppercase tracking-wider">Alvo</span> {currentGoal}{metricConfig[selectedMetric].unit}</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-              <div className="bg-gradient-to-r from-primary to-green-500 h-3 rounded-full transition-all duration-1000 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1)]" style={{ width: `${calculateProgress(chartData[0].valor as number, ultimaMedicao[selectedMetric] as number, currentGoal)}%` }}></div>
+              <div className="bg-gradient-to-r from-primary to-green-500 h-3 rounded-full transition-all duration-1000 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1)]" style={{ width: `${calculateProgress(chartData[0].valor as number, (selectedMetric === 'peso' ? ultimaMedicao.peso : selectedMetric === 'percentual_gordura' ? ultimaCalculada.bf : ultimaCalculada.mm) as number, currentGoal)}%` }}></div>
             </div>
-            <p className="text-[10px] text-center mt-2 text-gray-500 font-bold uppercase tracking-widest">{calculateProgress(chartData[0].valor as number, ultimaMedicao[selectedMetric] as number, currentGoal).toFixed(1)}% Concluído</p>
+            <p className="text-[10px] text-center mt-2 text-gray-500 font-bold uppercase tracking-widest">{calculateProgress(chartData[0].valor as number, (selectedMetric === 'peso' ? ultimaMedicao.peso : selectedMetric === 'percentual_gordura' ? ultimaCalculada.bf : ultimaCalculada.mm) as number, currentGoal).toFixed(1)}% Concluído</p>
           </div>
         )}
 
