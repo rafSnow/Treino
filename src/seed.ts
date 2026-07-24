@@ -16,7 +16,15 @@ export const seedDatabase = async () => {
     await db.rotinas.clear();
   } else {
     const exCount = await db.exercicios.count();
-    if (exCount > 0) return; // Already seeded with something else
+    const rotCount = await db.rotinas.count();
+    if (exCount > 0 && rotCount > 0) return; // Already seeded
+    
+    // If we have partial seed, let's clear it and try again to avoid duplicates
+    if (exCount > 0 || rotCount > 0) {
+      console.log("Partial seed detected, clearing to try again...");
+      await db.exercicios.clear();
+      await db.rotinas.clear();
+    }
   }
 
   console.log("Seeding database (PT-BR)...");
