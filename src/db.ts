@@ -24,6 +24,24 @@ const mapTimestamps = (data: any) => {
   return out;
 };
 
+const removeUndefined = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(removeUndefined);
+  } else if (obj !== null && typeof obj === 'object') {
+    if (typeof obj.toDate === 'function' || obj instanceof Date) {
+      return obj;
+    }
+    const newObj: any = {};
+    for (const key in obj) {
+      if (obj[key] !== undefined) {
+        newObj[key] = removeUndefined(obj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+};
+
 class FirebaseTable<T> {
   private name: string;
   constructor(name: string) { this.name = name; }
@@ -40,14 +58,14 @@ class FirebaseTable<T> {
   }
 
   async add(data: any) {
-    const res = await addDoc(this.ref, data);
+    const res = await addDoc(this.ref, removeUndefined(data));
     return res.id;
   }
 
   async put(data: any) {
     if (data.id) {
       const { id, ...rest } = data;
-      await updateDoc(doc(this.ref, id), rest);
+      await updateDoc(doc(this.ref, id), removeUndefined(rest));
       return id;
     }
     return this.add(data);
@@ -64,7 +82,7 @@ class FirebaseTable<T> {
   }
   
   async update(id: string, data: any) {
-    await updateDoc(doc(this.ref, id), data);
+    await updateDoc(doc(this.ref, id), removeUndefined(data));
   }
 
   async clear() {
@@ -103,8 +121,9 @@ class FirebaseTable<T> {
         modify: async (data: any) => {
           const q = query(this.ref, where(field, '==', val));
           const snap = await getDocs(q);
+          const sanitized = removeUndefined(data);
           for (const docSnap of snap.docs) {
-            await updateDoc(docSnap.ref, data);
+            await updateDoc(docSnap.ref, sanitized);
           }
         }
       })
