@@ -4,7 +4,7 @@ import { db, type Biometria } from './db';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera, ChevronLeft, ChevronRight, Layers, SlidersHorizontal, Target, HeartPulse, Info } from 'lucide-react';
+import { Scale, Ruler, Plus, Trash2, Save, X, Activity, Droplets, Camera, ChevronLeft, ChevronRight, Layers, SlidersHorizontal, Target, HeartPulse } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PhotoComparison from './PhotoComparison';
 
