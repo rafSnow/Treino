@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Rotina } from './db';
-import { Play, Plus, Trash2, Edit2, CalendarCheck, Share2, Copy, Clock } from 'lucide-react';
+import { Play, Plus, Trash2, Edit2, CalendarCheck, Share2, Copy, Clock, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import RoutineForm from './RoutineForm';
 import { useWorkoutStore } from './store';
 import { useConfirm } from './ConfirmDialog';
@@ -38,6 +40,75 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
   
   const today = new Date().getDay();
   const suggestionId = planoSemanal.find(p => p.dia_semana === today)?.rotina_id;
+
+  const handlePdfGenerate = async (routine: Rotina) => {
+    try {
+      toast.loading('Gerando PDF...', { id: 'pdf' });
+      
+      const doc = new jsPDF();
+      
+      doc.setFontSize(20);
+      doc.text(`Ficha de Treino: ${routine.nome}`, 14, 22);
+      
+      const exerciseIds = routine.exercicios.map(e => String(e.exercicio_id));
+      const allEx = await db.exercicios.toArray();
+      const exercises = allEx.filter(e => exerciseIds.includes(String(e.id)));
+      
+      const tableData = routine.exercicios.map((re, index) => {
+        const exInfo = exercises.find(e => e.id === re.exercicio_id);
+        const nome = exInfo ? exInfo.nome : 'Exercício Desconhecido';
+        const series = `${re.series_aquecimento > 0 ? `${re.series_aquecimento}x Aq. + ` : ''}${re.series_trabalho}x Tr.`;
+        
+        let reps = '';
+        if (re.metas.repeticoes) reps = re.metas.repeticoes;
+        else if (re.metas.tempo) reps = `${re.metas.tempo}s`;
+        
+        const descanso = re.tempo_descanso ? `${re.tempo_descanso}s` : '-';
+        
+        return [
+          (index + 1).toString(),
+          nome,
+          series,
+          reps,
+          descanso,
+          '', // Carga (vazio para preencher à mão)
+          ''  // Anotações (vazio para preencher à mão)
+        ];
+      });
+
+      autoTable(doc, {
+        startY: 30,
+        head: [['#', 'Exercício', 'Séries', 'Reps', 'Descanso', 'Carga', 'Anotações']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [43, 99, 217], textColor: 255 }, // Usando a cor primary do app (aprox)
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 25 },
+          3: { cellWidth: 20 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 25 },
+          6: { cellWidth: 'auto' },
+        },
+        styles: { fontSize: 10, cellPadding: 3 },
+      });
+      
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      for(let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`Treino PWA - Página ${i} de ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+      }
+
+      doc.save(`treino_${routine.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+      toast.success('PDF baixado com sucesso!', { id: 'pdf' });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar PDF', { id: 'pdf' });
+    }
+  };
 
   const handleShare = async (routine: Rotina) => {
     try {
@@ -213,6 +284,13 @@ const RoutineList: React.FC<RoutineListProps> = ({ onOpenCatalog }) => {
                     title="Compartilhar"
                   >
                     <Share2 size={20} />
+                  </button>
+                  <button aria-label="PDF" 
+                    onClick={() => handlePdfGenerate(routine)}
+                    className="p-3 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors flex items-center justify-center"
+                    title="Exportar PDF"
+                  >
+                    <FileText size={20} />
                   </button>
                   <button aria-label="Botão" 
                     onClick={() => handleClone(routine)}
